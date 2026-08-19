@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "小Y日历",
+  "short_name": "小Y日历",
+  "description": "可爱的工期统计与每日便签，数据只保存在本机。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#79ddbd",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
