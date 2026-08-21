@@ -1845,6 +1845,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
   .app-header.is-admin .plan-button { min-width: 78px; padding-inline: 7px; }
   .app-header.is-admin .admin-link-button,
   .app-header.is-admin .icon-button { flex: 0 0 38px; }
+  .app-header.is-admin .download-app-button { min-width: 34px; width: 34px; flex-basis: 34px; }
+  .app-header.is-admin .download-app-button span { display: none; }
   .app-header.is-admin .account-chip { flex: 0 0 76px; }
   .download-app-button { min-width: 42px; width: 42px; height: 38px; flex: 0 0 42px; flex-direction: column; gap: 0; padding: 2px; font-size: 7px; line-height: 1; }
   .download-app-button svg { width: 16px; }

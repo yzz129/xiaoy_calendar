@@ -3,7 +3,7 @@
 一个把日历、工期统计、便签、学习/工作规划和 AI 助手放在一起的可爱效率应用。支持网页、PWA 与 Android，登录后以云端数据为主进行多端同步，同时保留基础日历的本地可用能力。
 
 [![在线使用](https://img.shields.io/badge/在线使用-calendar.yzzwnw.asia-2fc49f?style=for-the-badge)](https://calendar.yzzwnw.asia/)
-[![下载 APK](https://img.shields.io/badge/下载-Android_APK-ff7c70?style=for-the-badge&logo=android&logoColor=white)](https://github.com/yzz129/xiaoy_calendar/releases/latest/download/xiaoy-calendar-1.5-store.apk)
+[![下载 APK](https://img.shields.io/badge/下载-Android_APK-ff7c70?style=for-the-badge&logo=android&logoColor=white)](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-latest.apk)
 
 > 当前 Android 版本：**1.5**（versionCode 6），支持 Android 7.0 及以上系统。
 
@@ -17,7 +17,7 @@
 ## 下载与体验
 
 - 在线版：[https://calendar.yzzwnw.asia/](https://calendar.yzzwnw.asia/)
-- Android APK：[直接下载最新版](https://github.com/yzz129/xiaoy_calendar/releases/latest/download/xiaoy-calendar-1.5-store.apk)
+- Android APK：[从小Y日历官网下载最新版](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-latest.apk)
 - GitHub Releases：[查看全部发布版本](https://github.com/yzz129/xiaoy_calendar/releases)
 - 管理员入口：[https://calendar.yzzwnw.asia/admin/](https://calendar.yzzwnw.asia/admin/)
 

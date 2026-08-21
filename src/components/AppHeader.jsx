@@ -19,7 +19,7 @@ export default function AppHeader({ month, onPrevious, onNext, onToday, onPlans,
         <button className="icon-button" onClick={onTheme} aria-label="切换主题">
           {theme === 'light' ? <MoonStar /> : <Sun />}
         </button>
-        {!isNativeApp() && user.role !== 'admin' ? <a className="download-app-button" href={APK_DOWNLOAD_URL} aria-label="下载小Y日历 Android APP" title="下载 Android APP"><Download /><span>下载APP</span></a> : null}
+        {!isNativeApp() ? <a className="download-app-button" href={APK_DOWNLOAD_URL} download aria-label="下载小Y日历 Android APP" title="下载 Android APP"><Download /><span>下载APP</span></a> : null}
         {user.role === 'admin' ? <a className="admin-link-button" href="/admin/" aria-label="进入管理员后台"><ShieldCheck /></a> : null}
         <div className="account-chip"><button className="account-profile-button" onClick={onProfile} aria-label="修改个人资料" title="个人资料"><UserRound /><span>{user.nickname}</span></button><button className="account-logout-button" onClick={onLogout} aria-label="退出登录" title="退出登录"><LogOut /></button></div>
       </div>
