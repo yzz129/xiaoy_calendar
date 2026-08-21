@@ -34,7 +34,7 @@ export async function onRequestGet({ request, env, params }) {
       FROM chat_messages WHERE user_id = ? ORDER BY created_at DESC LIMIT 200`).bind(id).all(),
     env.DB.prepare(`SELECT id, provider, model, request_preview, response_preview, status, latency_ms, error, created_at
       FROM model_calls WHERE user_id = ? ORDER BY created_at DESC LIMIT 200`).bind(id).all(),
-    env.DB.prepare(`SELECT id, action, detail_json, created_at, ip, user_agent
+    env.DB.prepare(`SELECT id, action, detail_json, created_at, ip, user_agent, location
       FROM activity_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 300`).bind(id).all(),
     env.DB.prepare(`SELECT
       (SELECT COUNT(*) FROM sessions WHERE user_id = ?) AS session_count,
@@ -61,7 +61,7 @@ export async function onRequestGet({ request, env, params }) {
     env.DB.prepare(`SELECT action, COUNT(*) AS count, MAX(created_at) AS last_used_at
       FROM activity_logs WHERE user_id = ?
       GROUP BY action ORDER BY count DESC, last_used_at DESC`).bind(id).all(),
-    env.DB.prepare(`SELECT created_at, expires_at, last_seen_at, user_agent, ip
+    env.DB.prepare(`SELECT created_at, expires_at, last_seen_at, user_agent, ip, location
       FROM sessions WHERE user_id = ? ORDER BY last_seen_at DESC LIMIT 50`).bind(id).all(),
   ])
   if (!user) return jsonResponse({ error: '用户不存在' }, 404, request)

@@ -204,7 +204,12 @@ export async function authenticate(env, request, requireAdmin = false) {
     return null
   }
   if (requireAdmin && user.role !== 'admin') return null
-  await env.DB.prepare('UPDATE sessions SET last_seen_at = ? WHERE id = ?').bind(nowIso(), sessionId).run()
+  await env.DB.prepare(`UPDATE sessions
+    SET last_seen_at = ?,
+        location = COALESCE(NULLIF(location, ''), NULLIF(?, ''))
+    WHERE id = ?`)
+    .bind(nowIso(), requestLocation(request), sessionId)
+    .run()
   return user
 }
 
@@ -215,9 +220,9 @@ export async function createSession(env, userId, request, { adminScope = false }
   const expiresAt = new Date(Date.now() + SESSION_SECONDS * 1000).toISOString()
   await env.DB.batch([
     env.DB.prepare(`INSERT INTO sessions
-      (id, user_id, created_at, expires_at, last_seen_at, user_agent, ip)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`)
-      .bind(id, userId, createdAt, expiresAt, createdAt, compactText(request.headers.get('User-Agent'), 300), requestIp(request)),
+      (id, user_id, created_at, expires_at, last_seen_at, user_agent, ip, location)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+      .bind(id, userId, createdAt, expiresAt, createdAt, compactText(request.headers.get('User-Agent'), 300), requestIp(request), requestLocation(request)),
     env.DB.prepare('DELETE FROM sessions WHERE expires_at <= ?').bind(createdAt),
   ])
   return {
@@ -240,11 +245,28 @@ export function requestIp(request) {
   return compactText(request.headers.get('CF-Connecting-IP') || '', 64)
 }
 
+export function requestLocation(request) {
+  const cf = request?.cf || {}
+  const values = [
+    compactText(cf.city, 80),
+    compactText(cf.region, 80),
+    compactText(cf.country || request?.headers?.get?.('CF-IPCountry'), 16),
+  ]
+  const seen = new Set()
+  return values.filter((value) => {
+    if (!value) return false
+    const key = value.toLocaleLowerCase('en-US')
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  }).join(' · ')
+}
+
 export async function logActivity(env, request, userId, action, detail = {}) {
   if (!env.DB) return
   await env.DB.prepare(`INSERT INTO activity_logs
-    (id, user_id, action, detail_json, created_at, ip, user_agent)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`)
+    (id, user_id, action, detail_json, created_at, ip, user_agent, location)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
     .bind(
       crypto.randomUUID(),
       userId || null,
@@ -253,6 +275,7 @@ export async function logActivity(env, request, userId, action, detail = {}) {
       nowIso(),
       requestIp(request),
       compactText(request.headers.get('User-Agent'), 300),
+      requestLocation(request),
     ).run()
 }
 
