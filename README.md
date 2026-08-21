@@ -5,7 +5,7 @@
 [![在线使用](https://img.shields.io/badge/在线使用-calendar.yzzwnw.asia-2fc49f?style=for-the-badge)](https://calendar.yzzwnw.asia/)
 [![下载 APK](https://img.shields.io/badge/下载-Android_APK-ff7c70?style=for-the-badge&logo=android&logoColor=white)](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-latest.apk)
 
-> 当前 Android 版本：**1.5**（versionCode 6），支持 Android 7.0 及以上系统。
+> 当前 Android 版本：**1.5**（versionCode 7），支持 Android 7.0 及以上系统。
 
 ## 最新界面
 
