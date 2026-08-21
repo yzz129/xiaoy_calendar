@@ -1,8 +1,9 @@
-const CACHE_NAME = 'xiaoy-calendar-v19'
+const CACHE_NAME = 'xiaoy-calendar-v20'
 const CORE_FILES = [
   '/',
   '/index.html',
   '/privacy/',
+  '/download/',
   '/manifest.webmanifest',
   '/favicon.png',
   '/icon-192.png',

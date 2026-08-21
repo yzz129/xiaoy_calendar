@@ -1631,6 +1631,52 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .auth-download strong { font-size: 12px; }
 .auth-download small { color: var(--text); font-size: 9px; }
 .auth-privacy { display: block; width: fit-content; margin: 18px auto 0; color: var(--text); font-size: 11px; }
+
+.download-page { min-height: 100vh; display: grid; place-items: center; padding: 28px 16px; background: radial-gradient(circle at 15% 15%, rgba(117, 218, 187, .18), transparent 32%), radial-gradient(circle at 85% 90%, rgba(255, 214, 102, .16), transparent 30%), var(--page); }
+.download-card { width: min(620px, 100%); padding: 24px; border: 1px solid var(--line); border-top: 6px solid var(--mint); border-radius: 24px 20px 26px 18px; background: var(--panel); box-shadow: 10px 12px 0 var(--shadow); }
+.download-brand { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.download-brand .logo { transform-origin: left center; transform: scale(.78); }
+.download-brand > span { color: var(--mint-dark); font-size: 10px; }
+.download-hero { display: grid; grid-template-columns: 116px 1fr; align-items: center; gap: 20px; padding: 28px 12px 22px; }
+.download-hero img { width: 116px; height: 116px; object-fit: contain; }
+.download-hero p { margin: 0 0 5px; color: var(--mint-dark); font-size: 10px; }
+.download-hero h1 { margin: 0; color: var(--ink); font-size: clamp(28px, 5vw, 44px); line-height: 1.05; }
+.download-hero small { display: block; margin-top: 12px; color: var(--text); font-size: 9px; line-height: 1.8; }
+.download-browser-tip { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; padding: 14px; border: 1px solid var(--yellow); border-radius: 14px 12px 16px 10px; background: var(--yellow-soft); color: var(--ink); }
+.download-browser-tip > svg { width: 22px; flex: 0 0 auto; color: var(--coral); }
+.download-browser-tip span { display: grid; gap: 5px; }
+.download-browser-tip strong { font-size: 10px; }
+.download-browser-tip small { color: var(--text); font-size: 8px; line-height: 1.7; }
+.download-primary { min-height: 76px; display: flex; align-items: center; justify-content: center; gap: 14px; padding: 12px 18px; border: 2px solid var(--ink); border-radius: 18px 14px 20px 15px; background: var(--mint); color: var(--ink); box-shadow: 5px 6px 0 var(--ink); transition: transform 180ms ease, box-shadow 180ms ease; }
+.download-primary:hover { transform: translate(-1px, -1px); box-shadow: 7px 8px 0 var(--ink); }
+.download-primary:active { transform: translate(2px, 2px); box-shadow: 2px 3px 0 var(--ink); }
+.download-primary > svg { width: 30px; flex: 0 0 auto; }
+.download-primary span { display: grid; gap: 3px; }
+.download-primary strong { font-size: 16px; }
+.download-primary small { font-size: 8px; color: var(--text); }
+.download-copy { width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel-soft); color: var(--ink); font-size: 9px; }
+.download-copy svg { width: 17px; }
+.download-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
+.download-features > span { min-height: 92px; display: grid; grid-template-columns: 28px 1fr; align-content: center; column-gap: 8px; padding: 14px; border: 1px dashed var(--line); border-radius: 15px; }
+.download-features svg { width: 24px; color: var(--mint-dark); grid-row: 1 / span 2; }
+.download-features strong { font-size: 9px; }
+.download-features small { color: var(--text); font-size: 7px; line-height: 1.6; }
+.download-back { width: fit-content; display: flex; align-items: center; gap: 6px; margin: 22px auto 0; color: var(--mint-dark); font-size: 9px; text-decoration: underline; text-underline-offset: 4px; }
+.download-back svg { width: 17px; }
+
+@media (max-width: 560px) {
+  .download-page { align-items: start; padding: 12px 10px 24px; }
+  .download-card { padding: 16px 14px 20px; border-radius: 20px 17px 22px 15px; box-shadow: 6px 8px 0 var(--shadow); }
+  .download-brand { padding-bottom: 10px; }
+  .download-hero { grid-template-columns: 82px 1fr; gap: 10px; padding: 20px 4px 18px; }
+  .download-hero img { width: 82px; height: 82px; }
+  .download-hero h1 { font-size: 27px; }
+  .download-hero small { margin-top: 8px; font-size: 8px; }
+  .download-primary { min-height: 66px; }
+  .download-primary strong { font-size: 13px; }
+  .download-features { grid-template-columns: 1fr; }
+  .download-features > span { min-height: 70px; }
+}
 .auth-user-entry { display: block; width: fit-content; margin: 16px auto 0; color: var(--mint-dark); font-size: 12px; font-weight: 900; }
 .auth-loading, .auth-denied { display: grid; justify-items: center; gap: 12px; text-align: center; }
 .auth-loading svg { width: 28px; animation: xyAgentSpin 1s linear infinite; }

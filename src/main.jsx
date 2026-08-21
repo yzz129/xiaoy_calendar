@@ -4,12 +4,14 @@ import { LoaderCircle, LockKeyhole } from 'lucide-react'
 import App from './App'
 import { authFetch, login as loginAccount, logout as logoutAccount, register as registerAccount } from './auth'
 import LoginScreen from './components/LoginScreen'
+import DownloadScreen from './components/DownloadScreen'
 import './styles.css'
 
 const AdminApp = lazy(() => import('./components/AdminApp'))
 
 const isNativeApp = window.Capacitor?.isNativePlatform?.() === true
 const isAdminRoute = window.location.pathname.startsWith('/admin')
+const isDownloadRoute = window.location.pathname.startsWith('/download')
 const CACHED_USER_KEY = isAdminRoute ? 'xiaoy-calendar:admin-user:v1' : 'xiaoy-calendar:user:v1'
 const SESSION_ENDPOINT = isAdminRoute ? '/api/auth/session?scope=admin' : '/api/auth/session'
 
@@ -35,6 +37,10 @@ function Root() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (isDownloadRoute) {
+      setLoading(false)
+      return undefined
+    }
     let active = true
     authFetch(SESSION_ENDPOINT)
       .then(async (response) => {
@@ -75,6 +81,7 @@ function Root() {
     setUser(nextUser)
   }
 
+  if (isDownloadRoute) return <DownloadScreen />
   if (loading) return <main className="auth-page"><div className="auth-loading"><LoaderCircle /><span>小Y 正在确认登录状态…</span></div></main>
   if (!user) return <LoginScreen onLogin={handleLogin} onRegister={handleRegister} adminMode={isAdminRoute} />
   if (isAdminRoute) {

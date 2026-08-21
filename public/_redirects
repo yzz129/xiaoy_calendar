@@ -1,2 +1,4 @@
 /admin /admin/ 301
 /admin/* /index.html 200
+/download /download/ 301
+/download/* /index.html 200
