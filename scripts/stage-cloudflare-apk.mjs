@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const source = resolve(process.env.XIAOY_APK_PATH || resolve(repoRoot, 'release/xiaoy-calendar-1.5-store.apk'))
+const source = resolve(process.env.XIAOY_APK_PATH || resolve(repoRoot, 'release/xiaoy-calendar-1.7-store.apk'))
 const destination = resolve(repoRoot, 'dist/downloads/xiaoy-calendar-latest.apk')
 const pagesAssetLimit = 25 * 1024 * 1024
 const wechatVerificationFile = resolve(repoRoot, 'dist/3848ceb297f8b0a459436cb065b6c643.txt')
