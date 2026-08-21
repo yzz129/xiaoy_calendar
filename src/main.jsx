@@ -26,7 +26,7 @@ function cacheUser(user) {
 
 if (!isNativeApp && import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureContext) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
+    navigator.serviceWorker.register('/sw.js?v=21', { updateViaCache: 'none' }).catch(() => {
       // 离线缓存注册失败时不影响日历本身使用。
     })
   })
