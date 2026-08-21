@@ -55,6 +55,19 @@ try {
     if (-not (Test-Path -LiteralPath $builtApk)) { throw "Signed APK was not generated: $builtApk" }
     if (-not (Test-Path -LiteralPath $builtAab)) { throw "Signed AAB was not generated: $builtAab" }
 
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($builtApk)
+    try {
+        $embeddedApks = @($archive.Entries | Where-Object { $_.FullName -match '(?i)\.apk$' })
+        if ($embeddedApks.Count -gt 0) {
+            $embeddedNames = ($embeddedApks.FullName -join ', ')
+            throw "Release APK contains another APK: $embeddedNames"
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
+
     Copy-Item -LiteralPath $builtApk -Destination $apkOutput -Force
     Copy-Item -LiteralPath $builtAab -Destination $aabOutput -Force
 
