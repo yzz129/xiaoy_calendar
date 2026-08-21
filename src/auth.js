@@ -22,7 +22,10 @@ export async function authFetch(path, options = {}) {
   const headers = new Headers(options.headers || {})
   const token = getStoredToken()
   if (token) headers.set('Authorization', `Bearer ${token}`)
-  return fetch(apiUrl(path), { ...options, headers, credentials: 'include' })
+  const requestOptions = { ...options, headers, credentials: 'include' }
+  const method = String(options.method || 'GET').toUpperCase()
+  if (method === 'GET') requestOptions.cache = 'no-store'
+  return fetch(apiUrl(path), requestOptions)
 }
 
 export async function login(nickname, password, { admin = false } = {}) {
