@@ -1,4 +1,4 @@
-const CACHE_NAME = 'xiaoy-calendar-v20'
+const CACHE_NAME = 'xiaoy-calendar-v21'
 const CORE_FILES = [
   '/',
   '/index.html',
@@ -31,6 +31,10 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
 
   if (request.method !== 'GET' || url.origin !== self.location.origin) return
+
+  // API responses are user-specific and change frequently. Let the browser
+  // fetch them directly so HTTP no-store headers are always respected.
+  if (url.pathname.startsWith('/api/')) return
 
   if (request.mode === 'navigate') {
     event.respondWith(
