@@ -1839,6 +1839,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .admin-breakdown > article > span:last-child { justify-items: end; }
 .admin-breakdown strong, .admin-breakdown b { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .admin-breakdown small, .admin-session-list small { color: var(--muted); font-size: 8px; }
+.admin-meta-line { display: block; line-height: 1.5; overflow-wrap: anywhere; }
+.admin-technical { font-size: 7px !important; opacity: .78; }
 .admin-action-breakdown { display: flex; flex-wrap: wrap; gap: 7px; }
 .admin-action-breakdown > span { min-width: 150px; flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 3px 7px; padding: 9px 10px; border-radius: 10px; background: var(--paper); }
 .admin-action-breakdown strong { overflow: hidden; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }

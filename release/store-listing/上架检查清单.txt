@@ -1,8 +1,8 @@
 【已经完成】
 1. 应用名称：小Y日历
 2. 包名：com.xiaoy.calendar
-3. versionCode：1
-4. versionName：1.0
+3. versionCode：7
+4. versionName：1.7
 5. targetSdkVersion：36
 6. 纯离线，无 INTERNET 权限
 7. 应用内隐私政策入口
