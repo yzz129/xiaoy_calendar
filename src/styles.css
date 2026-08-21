@@ -1654,6 +1654,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .download-primary span { display: grid; gap: 3px; }
 .download-primary strong { font-size: 16px; }
 .download-primary small { font-size: 8px; color: var(--text); }
+.download-handoff-status { margin: 12px 2px 0; padding: 10px 12px; border: 1px dashed var(--coral); border-radius: 12px; background: var(--coral-soft); color: var(--coral-dark); font-size: 8px; line-height: 1.65; text-align: center; }
 .download-copy { width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel-soft); color: var(--ink); font-size: 9px; }
 .download-copy svg { width: 17px; }
 .download-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }

@@ -1,12 +1,27 @@
 import { useState } from 'react'
 import { ArrowLeft, Check, Clipboard, Download, ExternalLink, ShieldCheck, Smartphone } from 'lucide-react'
-import { APK_DOWNLOAD_URL, isEmbeddedBrowser } from '../app-links'
+import { APK_DOWNLOAD_URL, createAndroidBrowserIntent, isAndroid, isEmbeddedBrowser } from '../app-links'
 import mascot from '../assets/illustrations/agent-celebrate.png'
 import Logo from './Logo'
 
 export default function DownloadScreen() {
   const [copied, setCopied] = useState(false)
+  const [handoffBlocked, setHandoffBlocked] = useState(false)
   const embedded = isEmbeddedBrowser()
+  const useBrowserIntent = embedded && isAndroid()
+  const downloadTarget = useBrowserIntent ? createAndroidBrowserIntent(APK_DOWNLOAD_URL) : APK_DOWNLOAD_URL
+
+  const openDownload = (event) => {
+    if (!useBrowserIntent) return
+
+    event.preventDefault()
+    setHandoffBlocked(false)
+    window.location.href = downloadTarget
+
+    window.setTimeout(() => {
+      if (!document.hidden) setHandoffBlocked(true)
+    }, 1400)
+  }
 
   const copyAddress = async () => {
     try {
@@ -41,13 +56,22 @@ export default function DownloadScreen() {
         {embedded ? (
           <div className="download-browser-tip" role="note">
             <ExternalLink />
-            <span><strong>当前是应用内置浏览器</strong><small>请点右上角“…”并选择“在浏览器打开”，再点击下载。也可以复制下面的地址。</small></span>
+            <span><strong>将自动尝试打开系统浏览器</strong><small>点击下方按钮即可跳转。如微信拦截跳转，请点右上角“…”选择“在浏览器打开”，或复制下载地址。</small></span>
           </div>
         ) : null}
 
-        <a className="download-primary" href={APK_DOWNLOAD_URL} download>
-          <Download /><span><strong>下载最新版 APK</strong><small>约 13 MB · Android 8.0 及以上</small></span>
+        <a
+          className="download-primary"
+          href={downloadTarget}
+          download={useBrowserIntent ? undefined : true}
+          onClick={openDownload}
+        >
+          {useBrowserIntent ? <ExternalLink /> : <Download />}
+          <span><strong>{useBrowserIntent ? '使用系统浏览器下载' : '下载最新版 APK'}</strong><small>约 13 MB · Android 8.0 及以上</small></span>
         </a>
+        {handoffBlocked ? (
+          <p className="download-handoff-status" role="status">微信阻止了自动跳转，请点右上角“…”选择“在浏览器打开”，或复制下方地址。</p>
+        ) : null}
         <button className="download-copy" type="button" onClick={copyAddress}>
           {copied ? <Check /> : <Clipboard />}{copied ? '下载地址已复制' : '复制下载地址'}
         </button>
