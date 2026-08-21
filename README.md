@@ -18,7 +18,6 @@
 
 - 在线版：[https://calendar.yzzwnw.asia/](https://calendar.yzzwnw.asia/)
 - Android APK：[从小Y日历官网下载最新版](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-latest.apk)
-- GitHub Releases：[查看全部发布版本](https://github.com/yzz129/xiaoy_calendar/releases)
 - 管理员入口：[https://calendar.yzzwnw.asia/admin/](https://calendar.yzzwnw.asia/admin/)
 
 正式签名的 1.5 APK 可以直接覆盖正式版 1.4，账号、本地日历记录和应用数据会保留。若手机安装的是早期 Debug 包或其他签名版本，Android 会因签名不同而拒绝覆盖，需要先备份数据并卸载旧包。
@@ -133,11 +132,11 @@ powershell -ExecutionPolicy Bypass -File scripts/build-store-release.ps1
 ## Cloudflare 部署
 
 ```bash
-npm run build
+npm run build:cloudflare
 npx wrangler pages deploy dist --project-name xiaoy-calendar --branch main
 ```
 
-D1 数据库绑定、模型密钥和搜索密钥应通过 Cloudflare 控制台或 Wrangler Secrets 配置。
+`build:cloudflare` 会把本地 `release/xiaoy-calendar-1.5-store.apk` 临时放入 `dist/downloads`。APK 不进入 Git 仓库，也不会被 Capacitor 打进 Android 安装包。D1 数据库绑定、模型密钥和搜索密钥应通过 Cloudflare 控制台或 Wrangler Secrets 配置。
 
 ## 项目结构
 

@@ -48,6 +48,7 @@ key.properties
 keystore.properties
 
 # Packaged release artifacts (store-listing assets remain tracked)
+public/downloads/*.apk
 release/*.apk
 release/*.aab
 release/*.zip
