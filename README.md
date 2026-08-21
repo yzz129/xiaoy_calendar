@@ -1,89 +1,152 @@
 # 小Y日历
 
-一款可爱、轻量的工期统计与便签日历。支持按天记录工作日、休息日和请假状态，并自动汇总当月数据；所有个人记录默认保存在本机。
+一个把日历、工期统计、便签、学习/工作规划和 AI 助手放在一起的可爱效率应用。支持网页、PWA 与 Android，登录后以云端数据为主进行多端同步，同时保留基础日历的本地可用能力。
+
+[![在线使用](https://img.shields.io/badge/在线使用-calendar.yzzwnw.asia-2fc49f?style=for-the-badge)](https://calendar.yzzwnw.asia/)
+[![下载 APK](https://img.shields.io/badge/下载-Android_APK-ff7c70?style=for-the-badge&logo=android&logoColor=white)](https://github.com/yzz129/xiaoy_calendar/releases/latest/download/xiaoy-calendar-1.5-store.apk)
+
+> 当前 Android 版本：**1.5**（versionCode 6），支持 Android 7.0 及以上系统。
 
 ![小Y日历界面预览](release/store-listing/huawei/01-overview.jpg)
 
-## 功能特点
+## 下载与体验
 
-- 📅 月历浏览与快速切换月份
-- 💼 标记工作日、休息日和请假
-- ⏱️ 设置每日工期并自动统计
-- 📝 为每天创建和管理便签
-- 🌙 支持明暗主题切换
-- 📱 适配桌面浏览器与手机屏幕
-- 🔒 纯离线使用，数据保存在设备本地
-- 📦 支持 PWA 与 Android APK/AAB 打包
+- 在线版：[https://calendar.yzzwnw.asia/](https://calendar.yzzwnw.asia/)
+- Android APK：[直接下载最新版](https://github.com/yzz129/xiaoy_calendar/releases/latest/download/xiaoy-calendar-1.5-store.apk)
+- GitHub Releases：[查看全部发布版本](https://github.com/yzz129/xiaoy_calendar/releases)
+- 管理员入口：[https://calendar.yzzwnw.asia/admin/](https://calendar.yzzwnw.asia/admin/)
 
-## 在线体验
+正式签名的 1.5 APK 可以直接覆盖正式版 1.4，账号、本地日历记录和应用数据会保留。若手机安装的是早期 Debug 包或其他签名版本，Android 会因签名不同而拒绝覆盖，需要先备份数据并卸载旧包。
 
-[https://calendar.yzzwnw.asia/](https://calendar.yzzwnw.asia/)
+## 主要功能
 
-## 本地运行
+### 日历与工期
 
-请先安装 Node.js，然后执行：
+- 月历浏览、返回今天、快速切换与指定日期跳转
+- 标记工作日、休息日、请假，并支持再次点击取消状态
+- 设置每日工期，统计本月工作天数、请假天数和全部月份累计工期
+- 选择任意日期区间查看总工期
+- 展示农历、传统节日、国际节日、法定放假和调休上班标记
+- 明暗主题切换，适配桌面浏览器、手机浏览器和 Android WebView
+
+### 便签、待办与每日任务
+
+- 为任意日期添加、编辑、完成和删除便签/待办
+- 有内容的日期会在日历右上角显示对应图标
+- 每日任务可关联总规划，也可以单独添加、移动、调整或完成
+- 日期详情集中管理当天状态、工期、任务和便签
+
+### 学习规划与工作规划
+
+- 创建学习规划或工作规划，设置目标、日期范围、执行星期和默认任务
+- 总规划保持稳定，每日任务可以单独覆盖、增删和调整，不会影响其他日期
+- 规划中心支持筛选、进度统计、编辑、删除和完成情况查看
+- 规划任务自动映射到有效日期，并严格区分学习与工作类型
+
+### 小Y Agent
+
+- 根据目标、时间范围、已有日历和用户情况追问并生成可执行方案
+- 支持流式回复、联网搜索、来源链接和多模型容错
+- 生成规划草案，必须经用户确认后才会写入日历
+- 可操作日期状态、工期、便签、任务、规划、主题与日历跳转
+- 可打开个人资料设置；密码只在安全表单中修改，不交给模型处理
+- 宠物支持拖拽、隐藏到屏幕侧边、调整聊天气泡尺寸和多种状态形象
+- 断网时提示 Agent 需要联网，其余日历功能仍可继续使用
+
+### 账号与云端同步
+
+- 昵称和密码注册，昵称重复时会明确提示
+- 注册成功自动登录，后续支持自动登录
+- 普通用户可以修改自己的昵称和密码
+- 网页与 APK 使用同一账号系统，日历、工期、便签、规划和 Agent 会话多端同步
+- 普通用户会话与管理员会话相互独立，可以在同一浏览器同时登录
+
+### 管理员后台
+
+- 独立 `/admin/` 登录入口与管理员会话
+- 按用户查看账号状态、注册时间、最近登录和最近活跃时间
+- 用户搜索、排序、新增、修改、停用、重置密码与删除
+- 查看每位用户的规划、日历数据概览、聊天记录、模型调用和行为记录
+- 查看模型提供商、响应耗时、成功率、登录设备和同步次数
+- 桌面与手机端均提供适配布局
+
+## 数据与隐私
+
+- 密码经过不可逆哈希保存，服务端不会保存明文密码
+- 登录后以云端数据为主实现多端同步，并保留必要的本地副本
+- 只有使用 Agent 时，必要的对话内容和精简日历上下文才会发送给模型服务
+- 联网搜索仅在 Agent 需要资料时调用，外部链接由系统浏览器打开
+- API 密钥通过 Cloudflare 环境变量保存，不写入前端源码或仓库
+- 详细说明见：[隐私政策](https://calendar.yzzwnw.asia/privacy/)
+
+## 技术栈
+
+- React + Vite
+- Capacitor Android
+- Cloudflare Pages / Pages Functions
+- Cloudflare D1
+- Lucide React
+- lunar-javascript
+
+## 本地开发
+
+需要 Node.js、npm。
 
 ```bash
 npm install
 npm run dev
 ```
 
-浏览器访问终端显示的本地地址即可使用。
-
-## 构建网页版本
+构建网页：
 
 ```bash
 npm run build
 ```
 
-构建结果位于 `dist/` 目录，可部署到任意静态网站托管平台。
-
-## 构建 Android 版本
-
-构建前需要准备 Android SDK、JDK，并正确配置 Capacitor Android 环境。
-
-生成调试 APK：
+运行测试：
 
 ```bash
-npm run android:apk
+node --test tests/*.mjs
 ```
 
-同步网页资源到 Android 工程：
+## Android 构建
+
+需要 JDK、Android SDK，并准备与历史正式版一致的 JKS 签名文件。
 
 ```bash
 npm run android:sync
 ```
 
-签名发布包可使用：
+构建正式 APK 与 AAB：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/build-store-release.ps1
 ```
 
-> 签名脚本需要本机存在对应的 JKS 文件。签名证书、密码、APK、AAB 和其他发布产物不会提交到仓库。
+签名证书、密码和本地构建产物已被 `.gitignore` 排除，不应提交到仓库。应用升级必须保持 `applicationId` 和签名证书不变，并提升 `versionCode`。
 
-## 数据与隐私
+## Cloudflare 部署
 
-小Y日历不要求注册账号，不上传日历状态、工期或便签内容。清除浏览器数据或卸载应用前，请留意本地记录可能同时被删除。
+```bash
+npm run build
+npx wrangler pages deploy dist --project-name xiaoy-calendar --branch main
+```
 
-## 技术栈
-
-- React
-- Vite
-- Capacitor
-- Lucide React
+D1 数据库绑定、模型密钥和搜索密钥应通过 Cloudflare 控制台或 Wrangler Secrets 配置。
 
 ## 项目结构
 
 ```text
-src/                    前端源码
-public/                 PWA、隐私说明与静态资源
-android/                Capacitor Android 工程
-design/                 设计参考与应用图标
-release/store-listing/  应用商店文案与截图
-scripts/                Android 发布构建脚本
+src/                    React 前端、日历、规划、Agent 与管理员界面
+functions/              Cloudflare Pages Functions API
+migrations/             D1 数据库迁移
+public/                  PWA、隐私政策与静态资源
+android/                 Capacitor Android 工程
+release/store-listing/   应用商店截图与上架资料
+scripts/                 Android 正式版构建脚本
+tests/                   日期、Agent 与会话相关测试
 ```
 
 ## 许可证
 
-当前项目暂未声明开源许可证，默认保留所有权利。
+当前项目未声明开源许可证，默认保留所有权利。

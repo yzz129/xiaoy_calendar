@@ -1,10 +1,19 @@
 # Dependencies and frontend build output
 node_modules/
+.npm-cache/
+.npm-cache-task/
+.font-tools/
+.build-tools/
+.java-tmp/
+.android-sdk/
 dist/
 .vite/
 
 # Local Cloudflare state
 .wrangler/
+.wrangler-logs/
+.wrangler-functions-build/
+.xdg-local/
 
 # Environment files and logs
 .env
@@ -42,3 +51,4 @@ keystore.properties
 release/*.apk
 release/*.aab
 release/*.zip
+release/*.idsig

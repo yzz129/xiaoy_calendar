@@ -2,8 +2,8 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $keystorePath = Join-Path $repoRoot 'release\xiaoy-calendar-release.jks'
-$apkOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.0-store.apk'
-$aabOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.0-store.aab'
+$apkOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.5-store.apk'
+$aabOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.5-store.aab'
 
 if (-not (Test-Path -LiteralPath $keystorePath)) {
     throw "Signing keystore was not found: $keystorePath"

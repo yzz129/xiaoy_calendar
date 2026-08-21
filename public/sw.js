@@ -1,4 +1,4 @@
-const CACHE_NAME = 'xiaoy-calendar-v1'
+const CACHE_NAME = 'xiaoy-calendar-v19'
 const CORE_FILES = [
   '/',
   '/index.html',

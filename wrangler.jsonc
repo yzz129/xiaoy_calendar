@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "xiaoy-calendar",
+  "compatibility_date": "2026-08-20",
+  "pages_build_output_dir": "./dist",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "xiaoy-calendar-db",
+      "database_id": "c3455d0e-10ba-4541-901e-2caf4715f4b1",
+      "migrations_dir": "./migrations"
+    }
+  ]
+}

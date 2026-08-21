@@ -2,7 +2,7 @@
   "id": "/",
   "name": "小Y日历",
   "short_name": "小Y日历",
-  "description": "可爱的工期统计与每日便签，数据只保存在本机。",
+  "description": "可爱的工期统计、便签与规划工具，登录后支持云端多端同步。",
   "lang": "zh-CN",
   "start_url": "/",
   "scope": "/",
