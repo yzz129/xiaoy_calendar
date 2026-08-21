@@ -196,6 +196,26 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .plan-button:hover { border-color: var(--mint-dark); box-shadow: 3px 3px 0 var(--mint); transform: translate(-1px, -1px); }
 .plan-button svg { width: 18px; }
 .plan-button i { min-width: 17px; height: 17px; display: grid; position: absolute; top: -6px; right: -6px; place-items: center; padding: 0 3px; color: var(--paper); border: 2px solid var(--paper); border-radius: 9px; background: var(--coral); font-size: 8px; font-style: normal; }
+.download-app-button {
+  min-width: 82px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  color: var(--ink);
+  border: 1px solid var(--coral);
+  border-radius: 9px 11px 8px 12px;
+  background: var(--coral-soft);
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.download-app-button:hover { box-shadow: 3px 3px 0 var(--yellow); transform: translate(-1px, -1px); }
+.download-app-button:active { box-shadow: none; transform: translate(1px, 1px); }
+.download-app-button svg { width: 17px; flex: 0 0 auto; color: var(--coral); }
 
 .summary-strip {
   min-height: 86px;
@@ -1604,6 +1624,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .auth-note span { display: grid; gap: 3px; }
 .auth-note strong { color: var(--ink); font-size: 12px; }
 .auth-note small { line-height: 1.65; }
+.auth-download { width: min(620px, 100%); min-height: 58px; display: flex; align-items: center; gap: 12px; margin: 20px auto 0; padding: 10px 14px; color: var(--ink); border: 1px solid var(--coral); border-radius: 14px 11px 15px 10px; background: var(--coral-soft); transition: transform 180ms ease, box-shadow 180ms ease; }
+.auth-download:hover { box-shadow: 4px 4px 0 var(--yellow); transform: translate(-1px, -1px); }
+.auth-download > svg { width: 24px; flex: 0 0 auto; color: var(--coral); }
+.auth-download span { display: grid; gap: 2px; }
+.auth-download strong { font-size: 12px; }
+.auth-download small { color: var(--text); font-size: 9px; }
 .auth-privacy { display: block; width: fit-content; margin: 18px auto 0; color: var(--text); font-size: 11px; }
 .auth-user-entry { display: block; width: fit-content; margin: 16px auto 0; color: var(--mint-dark); font-size: 12px; font-weight: 900; }
 .auth-loading, .auth-denied { display: grid; justify-items: center; gap: 12px; text-align: center; }
@@ -1820,6 +1846,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
   .app-header.is-admin .admin-link-button,
   .app-header.is-admin .icon-button { flex: 0 0 38px; }
   .app-header.is-admin .account-chip { flex: 0 0 76px; }
+  .download-app-button { min-width: 42px; width: 42px; height: 38px; flex: 0 0 42px; flex-direction: column; gap: 0; padding: 2px; font-size: 7px; line-height: 1; }
+  .download-app-button svg { width: 16px; }
   .mobile-day-dock { position: static; z-index: auto; margin: 10px 3px 4px; }
   .mobile-day-dock > button { min-height: 50px; padding-block: 7px; box-shadow: 3px 4px 0 var(--mint); backdrop-filter: none; }
 
@@ -1832,6 +1860,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
   .auth-hero h1 { font-size: 26px; }
   .auth-hero small { font-size: 10px; }
   .auth-form input { min-height: 50px; }
+  .auth-download { min-height: 52px; margin-top: 16px; padding: 9px 12px; }
   .account-profile-button { width: 34px; padding: 0; justify-content: center; }
   .account-profile-button span { display: none; }
   .admin-link-button { width: 38px; height: 38px; }

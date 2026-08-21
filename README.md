@@ -7,7 +7,12 @@
 
 > 当前 Android 版本：**1.5**（versionCode 6），支持 Android 7.0 及以上系统。
 
-![小Y日历界面预览](release/store-listing/huawei/01-overview.jpg)
+## 最新界面
+
+<p align="center">
+  <img src="docs/screenshots/xiaoy-calendar-desktop.png" width="68%" alt="小Y日历网页端最新界面" />
+  <img src="docs/screenshots/xiaoy-calendar-mobile.png" width="25%" alt="小Y日历手机端最新界面" />
+</p>
 
 ## 下载与体验
 

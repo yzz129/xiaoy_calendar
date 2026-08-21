@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Eye, EyeOff, LockKeyhole, LogIn, ShieldCheck, Sparkles, UserPlus, UserRound } from 'lucide-react'
+import { Download, Eye, EyeOff, LockKeyhole, LogIn, ShieldCheck, Sparkles, UserPlus, UserRound } from 'lucide-react'
+import { APK_DOWNLOAD_URL, isNativeApp } from '../app-links'
 import mascot from '../assets/illustrations/agent-focused.png'
 import Logo from './Logo'
 
@@ -45,6 +46,7 @@ export default function LoginScreen({ onLogin, onRegister, adminMode = false }) 
           <button className="auth-submit" type="submit" disabled={busy || nickname.trim().length < 2 || password.length < 6}>{mode === 'register' && !adminMode ? <UserPlus /> : <LogIn />}{busy ? (mode === 'register' ? '正在注册…' : '正在登录…') : (mode === 'register' && !adminMode ? '注册并进入日历' : '登录')}</button>
         </form>
         {adminMode ? <a className="auth-user-entry" href="/">返回普通用户登录 / 注册</a> : null}
+        {!adminMode && !isNativeApp() ? <a className="auth-download" href={APK_DOWNLOAD_URL}><Download /><span><strong>下载 Android APP</strong><small>安装最新版，在手机桌面直接使用</small></span></a> : null}
         <div className="auth-note"><ShieldCheck /><span><strong>安全说明</strong><small>密码仅以不可逆哈希保存；账号资料以云端数据为准，可在多个设备登录并自动同步。</small></span></div>
         <a className="auth-privacy" href="/privacy/">隐私政策</a>
       </section>
