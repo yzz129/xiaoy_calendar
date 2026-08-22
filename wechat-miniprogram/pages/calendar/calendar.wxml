@@ -1,0 +1,45 @@
+<view class="page-shell calendar-page">
+  <view class="topbar">
+    <view class="brand">
+      <image src="/assets/app-icon.png" mode="aspectFit" />
+      <view><text>小Y日历</text><text class="brand-subtitle">{{user.nickname || '正在连接…'}}</text></view>
+    </view>
+    <button class="profile-button" bindtap="openProfile">我的</button>
+  </view>
+
+  <view class="summary-row">
+    <view class="summary-card card"><text>{{stats.workDays}}</text><text class="summary-label">本月工作日</text></view>
+    <view class="summary-card card"><text>{{stats.duration}}</text><text class="summary-label">累计工期</text></view>
+    <view class="summary-card card"><text>{{stats.notes}}</text><text class="summary-label">便签</text></view>
+  </view>
+
+  <view class="calendar-card card">
+    <view class="month-bar">
+      <button data-offset="-1" bindtap="changeMonth">‹</button>
+      <view><text>{{monthTitle}}</text><button bindtap="goToday">回到今天</button></view>
+      <button data-offset="1" bindtap="changeMonth">›</button>
+    </view>
+    <view class="week-row">
+      <text wx:for="{{weekLabels}}" wx:key="*this">{{item}}</text>
+    </view>
+    <view class="calendar-grid">
+      <button
+        wx:for="{{cells}}"
+        wx:key="key"
+        class="day-cell {{item.current ? '' : 'outside'}} {{item.today ? 'today' : ''}} {{item.status ? 'has-status ' + item.status : ''}}"
+        data-key="{{item.key}}"
+        bindtap="openDay"
+      >
+        <text class="day-number">{{item.day}}</text>
+        <text wx:if="{{item.status}}" class="status-dot"></text>
+        <text wx:if="{{item.noteCount}}" class="note-count">{{item.noteCount}}</text>
+      </button>
+    </view>
+  </view>
+
+  <view class="action-row">
+    <button class="primary-button" bindtap="openToday">记录今天</button>
+    <button class="secondary-button" bindtap="openPlans">规划中心（{{planCount}}）</button>
+  </view>
+  <view class="sync-tip">下拉刷新可从云端同步最新数据</view>
+</view>
