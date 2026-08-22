@@ -91,14 +91,22 @@
 
 .form-error { margin-top: 24rpx; padding: 20rpx 24rpx; display: grid; grid-template-columns: 34rpx 1fr; gap: 12rpx; border-radius: 22rpx; background: var(--coral-soft); color: #bd493a; font-size: 22rpx; font-weight: 800; line-height: 1.5; }
 .form-error > text { width: 32rpx; height: 32rpx; border: 2rpx solid currentColor; border-radius: 50%; text-align: center; line-height: 30rpx; }
+.consent-row { margin-top: 26rpx; display: flex; align-items: flex-start; gap: 14rpx; color: var(--text); font-size: 21rpx; line-height: 1.65; }
+.consent-check { width: 34rpx; height: 34rpx; flex: 0 0 34rpx; margin-top: 1rpx; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2rpx solid #91a4b6; border-radius: 9rpx; background: #fff; color: #fff; font-family: sans-serif; font-size: 24rpx; line-height: 1; }
+.consent-check.is-checked { border-color: var(--mint-dark); background: var(--mint-dark); }
+.consent-copy { display: flex; flex-wrap: wrap; align-items: center; }
+.consent-copy navigator { display: inline; color: var(--mint-dark); font-weight: 800; }
 .submit-button { min-height: 96rpx; margin: 32rpx 8rpx 0; gap: 12rpx; border-radius: 26rpx 20rpx 28rpx 18rpx; font-size: 28rpx; font-weight: 900; }
 .submit-button[disabled] { opacity: 1; border-color: #9bafbd; background: #e9f0f2; color: #667f92; box-shadow: none; }
+.guest-button { margin-top: 18rpx; border: 0; background: transparent; color: var(--text); font-size: 23rpx; font-weight: 800; text-decoration: underline; }
+.guest-button::after { border: 0; }
 
 .security-note { margin-top: 38rpx; padding: 26rpx; align-items: center; gap: 18rpx; border: 2rpx dashed var(--line); border-radius: 26rpx 22rpx 28rpx 20rpx; color: var(--text); font-size: 20rpx; line-height: 1.65; }
 .security-note view { display: flex; flex-direction: column; gap: 4rpx; }
 .shield { flex: 0 0 auto; color: var(--mint-dark); font-family: sans-serif; font-size: 34rpx; }
 .security-title { color: var(--ink); font-weight: 900; }
-.privacy-link { padding-top: 28rpx; color: var(--text); text-align: center; font-size: 21rpx; }
+.legal-links { padding-top: 28rpx; display: flex; justify-content: center; gap: 14rpx; color: var(--text); text-align: center; font-size: 21rpx; }
+.legal-links navigator { color: var(--text); }
 
 @media (max-width: 360px) {
   .auth-hero { grid-template-columns: 142rpx 1fr; padding-inline: 20rpx; }

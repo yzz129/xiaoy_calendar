@@ -7,6 +7,7 @@ Page({
     nickname: '',
     password: '',
     showPassword: false,
+    agreed: false,
     busy: false,
     error: '',
   },
@@ -40,8 +41,20 @@ Page({
     this.setData({ showPassword: !this.data.showPassword })
   },
 
+  toggleAgreement() {
+    this.setData({ agreed: !this.data.agreed, error: '' })
+  },
+
+  experienceFirst() {
+    wx.reLaunch({ url: '/pages/calendar/calendar' })
+  },
+
   async submit() {
     if (this.data.busy) return
+    if (!this.data.agreed) {
+      this.setData({ error: '请先阅读并勾选同意《用户服务协议》和《隐私政策》' })
+      return
+    }
     const nickname = this.data.nickname.trim()
     const password = this.data.password
     this.setData({ busy: true, error: '' })

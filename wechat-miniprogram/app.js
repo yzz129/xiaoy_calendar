@@ -39,7 +39,7 @@ function loadBrandFonts() {
   const origin = 'https://calendar.yzzwnw.asia/fonts'
   const load = (family, filename, quiet = false) => new Promise((resolve) => wx.loadFontFace({
     family,
-    source: `url("${origin}/${filename}?v=2.1.8")`,
+    source: `url("${origin}/${filename}?v=2.1.9")`,
     global: true,
     desc: { style: 'normal', weight: 'normal' },
     success: () => resolve(true),

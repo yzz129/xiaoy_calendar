@@ -122,7 +122,7 @@ function agentCalendarContext(page) {
 
 Page({
   data: {
-    user: {}, isAdmin: false, year: 0, month: 0, monthTitle: '', weekLabels: WEEK_LABELS, cells: [],
+    user: {}, loggedIn: false, isAdmin: false, year: 0, month: 0, monthTitle: '', weekLabels: WEEK_LABELS, cells: [],
     stats: { completed: 0, leave: 0, duration: 0 }, activePlanCount: 0,
     selectedKey: '', selectedTitle: '', daySheetTitle: '', selectedSummary: '待设置',
     dayOpen: false, dayTab: 'notes', dayEntry: { status: '', duration: 1 }, dayNotes: [], dayTasks: [], dayNewNote: '', dayComposeOpen: false,
@@ -156,15 +156,14 @@ Page({
   },
 
   onShow() {
-    if (!app.hasSession()) return wx.reLaunch({ url: '/pages/login/login' })
     this.startPetMoodTimer()
-    const needsInitialSync = !app.globalData.syncReady
+    const loggedIn = app.hasSession()
+    const needsInitialSync = loggedIn && !app.globalData.syncReady
     this.refreshView()
+    if (!loggedIn) return
     app.ensureSession({ maxAge: 5 * 60 * 1000 })
       .then(() => { if (needsInitialSync) this.refreshView() })
-      .catch(() => {
-        if (!app.hasSession()) wx.reLaunch({ url: '/pages/login/login' })
-      })
+      .catch(() => this.refreshView())
   },
 
   onHide() { this.stopPetMoodTimer() },
@@ -175,6 +174,12 @@ Page({
   },
 
   async onPullDownRefresh() {
+    if (!app.hasSession()) {
+      this.refreshView()
+      wx.stopPullDownRefresh()
+      wx.showToast({ title: '体验模式使用本地数据', icon: 'none' })
+      return
+    }
     try { await app.pullSnapshot(); this.refreshView(); wx.showToast({ title: '同步完成', icon: 'success' }) }
     catch (error) { wx.showToast({ title: error.message || '同步失败', icon: 'none' }) }
     finally { wx.stopPullDownRefresh() }
@@ -183,7 +188,7 @@ Page({
   refreshView() {
     const snapshot = app.globalData.snapshot
     this.setData({
-      user: app.globalData.user || {}, isAdmin: app.globalData.user?.role === 'admin', theme: snapshot.theme || 'light',
+      user: app.globalData.user || {}, loggedIn: app.hasSession(), isAdmin: app.globalData.user?.role === 'admin', theme: snapshot.theme || 'light',
       ...buildView(this.data.year, this.data.month, snapshot, this.data.selectedKey),
       rangeStats: rangeStats(snapshot.entries, this.data.rangeStart, this.data.rangeEnd),
     })
@@ -293,9 +298,21 @@ Page({
     })
     this.refreshView()
   },
-  openPlans() { wx.navigateTo({ url: '/pages/plans/plans' }) },
-  openProfile() { wx.navigateTo({ url: '/pages/profile/profile' }) },
-  openAdmin() { wx.navigateTo({ url: '/pages/admin/admin' }) },
+  openLogin() { wx.navigateTo({ url: '/pages/login/login' }) },
+  requireLogin(feature) {
+    if (app.hasSession()) return true
+    wx.showModal({
+      title: '登录后可使用',
+      content: `${feature}需要登录以启用账号与云端同步。你可以继续体验日历浏览和本地记录。`,
+      confirmText: '去登录',
+      cancelText: '继续体验',
+      success: (result) => { if (result.confirm) this.openLogin() },
+    })
+    return false
+  },
+  openPlans() { if (this.requireLogin('规划中心')) wx.navigateTo({ url: '/pages/plans/plans' }) },
+  openProfile() { if (this.requireLogin('个人中心')) wx.navigateTo({ url: '/pages/profile/profile' }) },
+  openAdmin() { if (this.requireLogin('管理员后台')) wx.navigateTo({ url: '/pages/admin/admin' }) },
   copyDownload() { wx.setClipboardData({ data: DOWNLOAD_PAGE, success: () => wx.showToast({ title: '下载地址已复制', icon: 'none' }) }) },
   toggleTheme() {
     const theme = this.data.theme === 'light' ? 'dark' : 'light'
@@ -304,7 +321,7 @@ Page({
   async logout() {
     const result = await new Promise((resolve) => wx.showModal({ title: '退出登录', content: '云端数据会保留，确定退出吗？', success: resolve }))
     if (!result.confirm) return
-    await app.logout(); wx.reLaunch({ url: '/pages/login/login' })
+    await app.logout(); wx.reLaunch({ url: '/pages/calendar/calendar' })
   },
   toggleRange() { this.setData({ rangeOpen: !this.data.rangeOpen }) },
   changeRangeStart(event) { this.setData({ rangeStart: event.detail.value }); this.refreshView() },
@@ -571,6 +588,7 @@ Page({
     if (this.data.petBusy) return
     const prompt = String(event?.currentTarget?.dataset?.prompt || this.data.petInput || '').trim()
     if (!prompt) return
+    if (!this.requireLogin('AI 宠物聊天')) return
     const previous = this.data.petMessages.slice(-18)
     const messages = [...previous, { role: 'user', content: prompt }]
     this.setData({ petInput: '', petBusy: true, petError: '', petCelebrating: false, petMessages: messages, petResult: { questions: [], planDrafts: [] }, petApplied: false }, () => this.refreshPetMood())

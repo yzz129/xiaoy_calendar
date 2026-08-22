@@ -16,6 +16,7 @@ const required = [
   'pages/day/day.js', 'pages/day/day.json', 'pages/day/day.wxml', 'pages/day/day.wxss',
   'pages/plans/plans.js', 'pages/plans/plans.json', 'pages/plans/plans.wxml', 'pages/plans/plans.wxss',
   'pages/profile/profile.js', 'pages/profile/profile.json', 'pages/profile/profile.wxml', 'pages/profile/profile.wxss',
+  'pages/terms/terms.js', 'pages/terms/terms.json', 'pages/terms/terms.wxml', 'pages/terms/terms.wxss',
   'pages/privacy/privacy.js', 'pages/privacy/privacy.json', 'pages/privacy/privacy.wxml', 'pages/privacy/privacy.wxss',
 ]
 
@@ -40,7 +41,13 @@ if (/小Y壁纸|丰富的壁纸资源|tea\.qingnian8\.com|upload\.qiniu\.com|cdn
   throw new Error('仍存在旧小程序名称、介绍或域名')
 }
 if (!allText.includes('https://calendar.yzzwnw.asia')) throw new Error('未配置小Y日历 API 域名')
-if (!allText.includes('微信小程序 2.1.8')) throw new Error('小程序页面版本号未更新为 2.1.8')
+if (!allText.includes('微信小程序 2.1.9')) throw new Error('小程序页面版本号未更新为 2.1.9')
+if (!allText.includes('toggleAgreement') || !allText.includes('暂不登录，先体验基础功能')) {
+  throw new Error('未配置用户主动同意协议或游客体验入口')
+}
+if (/onShow\(\)\s*\{\s*if \(!app\.hasSession\(\)\).*reLaunch/.test(allText)) {
+  throw new Error('首页仍存在未登录时强制跳转登录页的逻辑')
+}
 if (!allText.includes('onShareAppMessage') || !allText.includes('onShareTimeline')) {
   throw new Error('小程序分享能力未完整配置')
 }

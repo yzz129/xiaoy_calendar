@@ -12,9 +12,10 @@
       <view class="utility-actions">
         <view class="icon-action" aria-label="切换明暗模式" bindtap="toggleTheme"><image src="{{theme === 'light' ? '/assets/icons/lucide/moon-star.svg' : '/assets/icons/lucide/sun.svg'}}"/></view>
         <view class="icon-action download" aria-label="下载应用" bindtap="copyDownload"><image src="/assets/icons/lucide/download.svg"/></view>
-        <view wx:if="{{isAdmin}}" class="icon-action labeled admin" bindtap="openAdmin"><image src="/assets/icons/lucide/shield-check.svg"/><text>后台</text></view>
-        <view class="icon-action labeled profile" bindtap="openProfile"><image src="/assets/icons/lucide/user-round.svg"/><text>我的</text></view>
-        <view class="icon-action logout" aria-label="退出登录" bindtap="logout"><image src="/assets/icons/lucide/log-out.svg"/></view>
+        <view wx:if="{{loggedIn && isAdmin}}" class="icon-action labeled admin" bindtap="openAdmin"><image src="/assets/icons/lucide/shield-check.svg"/><text>后台</text></view>
+        <view wx:if="{{loggedIn}}" class="icon-action labeled profile" bindtap="openProfile"><image src="/assets/icons/lucide/user-round.svg"/><text>我的</text></view>
+        <view wx:if="{{loggedIn}}" class="icon-action logout" aria-label="退出登录" bindtap="logout"><image src="/assets/icons/lucide/log-out.svg"/></view>
+        <view wx:else class="icon-action labeled profile" bindtap="openLogin"><image src="/assets/icons/lucide/user-round.svg"/><text>登录</text></view>
       </view>
     </view>
     <view class="month-switcher">

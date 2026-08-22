@@ -6,6 +6,7 @@
     "pages/plans/plans",
     "pages/profile/profile",
     "pages/admin/admin",
+    "pages/terms/terms",
     "pages/privacy/privacy"
   ],
   "window": {

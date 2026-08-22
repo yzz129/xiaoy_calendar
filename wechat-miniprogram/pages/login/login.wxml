@@ -13,7 +13,7 @@
       <view class="hero-copy">
         <text class="hero-eyebrow">{{mode === 'register' ? '第一次见面' : '欢迎回来'}}</text>
         <text class="hero-title">{{mode === 'register' ? '注册小Y日历' : '登录小Y日历'}}</text>
-        <text class="hero-description">{{mode === 'register' ? '填写昵称和密码创建账号，注册成功后会自动登录。' : '使用已经注册的昵称和密码登录，以后打开可自动登录。'}}</text>
+        <text class="hero-description">{{mode === 'register' ? '填写昵称和密码创建账号；也可以先体验基础日历功能。' : '登录可启用云端同步；也可以先体验基础日历功能。'}}</text>
       </view>
     </view>
 
@@ -36,15 +36,21 @@
       </view>
     </label>
 
+    <view class="consent-row">
+      <view class="consent-check {{agreed ? 'is-checked' : ''}}" role="checkbox" aria-checked="{{agreed}}" aria-label="同意用户服务协议和隐私政策" bindtap="toggleAgreement"><text wx:if="{{agreed}}">✓</text></view>
+      <view class="consent-copy">我已阅读并同意<navigator url="/pages/terms/terms">《用户服务协议》</navigator>和<navigator url="/pages/privacy/privacy">《隐私政策》</navigator></view>
+    </view>
+
     <view wx:if="{{error}}" class="form-error"><text>!</text><view>{{error}}</view></view>
     <button class="primary-button submit-button" loading="{{busy}}" disabled="{{busy || nickname.length < 2 || password.length < 6}}" bindtap="submit">
       <text>{{mode === 'register' ? '＋' : '↪'}}</text>{{busy ? (mode === 'register' ? '正在注册…' : '正在登录…') : mode === 'register' ? '注册并进入日历' : '登录'}}
     </button>
+    <button class="guest-button" bindtap="experienceFirst">暂不登录，先体验基础功能</button>
 
     <view class="security-note">
       <text class="shield">◇</text>
       <view><text class="security-title">安全说明</text><text>密码仅以不可逆哈希保存；账号资料以云端数据为准，可在多个设备登录并自动同步。</text></view>
     </view>
-    <navigator class="privacy-link" url="/pages/privacy/privacy">隐私政策</navigator>
+    <view class="legal-links"><navigator url="/pages/terms/terms">用户服务协议</navigator><text>·</text><navigator url="/pages/privacy/privacy">隐私政策</navigator></view>
   </view>
 </view>
