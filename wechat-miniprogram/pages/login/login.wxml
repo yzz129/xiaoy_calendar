@@ -1,28 +1,50 @@
 <view class="login-page">
-  <view class="login-card card">
-    <image class="brand-icon" src="/assets/app-icon.png" mode="aspectFit" />
-    <view class="brand-name">小Y日历</view>
-    <view class="brand-copy">你的日历与规划搭子</view>
+  <view class="login-card">
+    <view class="tape"></view>
+    <view class="auth-brand">
+      <view class="brand-logo"><text class="brand-cloud">☁</text><text>小Y日历</text></view>
+      <view class="brand-copy">✦ 你的日历与规划搭子</view>
+    </view>
+
+    <view class="auth-hero">
+      <view class="mascot-stage">
+        <image class="hero-mascot" src="/assets/pet/agent-focused.png" mode="aspectFit" />
+      </view>
+      <view class="hero-copy">
+        <text class="hero-eyebrow">{{mode === 'register' ? '第一次见面' : '欢迎回来'}}</text>
+        <text class="hero-title">{{mode === 'register' ? '注册小Y日历' : '登录小Y日历'}}</text>
+        <text class="hero-description">{{mode === 'register' ? '填写昵称和密码创建账号，注册成功后会自动登录。' : '使用已经注册的昵称和密码登录，以后打开可自动登录。'}}</text>
+      </view>
+    </view>
 
     <view class="mode-tabs">
-      <button class="mode-tab {{mode === 'login' ? 'active' : ''}}" data-mode="login" bindtap="changeMode">登录</button>
-      <button class="mode-tab {{mode === 'register' ? 'active' : ''}}" data-mode="register" bindtap="changeMode">注册</button>
+      <view class="mode-tab {{mode === 'login' ? 'active' : ''}}" role="button" aria-label="切换到登录" data-mode="login" bindtap="changeMode"><text class="tab-icon">↪</text>登录</view>
+      <view class="mode-tab {{mode === 'register' ? 'active' : ''}}" role="button" aria-label="切换到注册" data-mode="register" bindtap="changeMode"><text class="tab-icon">＋</text>注册</view>
     </view>
 
     <label class="field">
       <text class="field-label">昵称</text>
-      <input class="input" value="{{nickname}}" maxlength="20" placeholder="2—20 个中英文、数字、下划线或短横线" bindinput="inputNickname" />
+      <input class="input" value="{{nickname}}" maxlength="20" placeholder="2—20 个中英文或数字" placeholder-class="xy-placeholder" bindinput="inputNickname" />
     </label>
     <label class="field">
       <text class="field-label">密码</text>
-      <input class="input" value="{{password}}" maxlength="72" password="{{!showPassword}}" placeholder="至少 6 位" bindinput="inputPassword" />
+      <view class="password-field">
+        <input class="input" value="{{password}}" maxlength="72" password="{{!showPassword}}" placeholder="至少 6 位" placeholder-class="xy-placeholder" bindinput="inputPassword" />
+        <view class="password-switch" hover-class="password-switch-hover" role="button" aria-label="{{showPassword ? '隐藏密码' : '显示密码'}}" bindtap="togglePassword">
+          <image class="password-eye" src="{{showPassword ? '/assets/icons/eye.svg' : '/assets/icons/eye-off.svg'}}" mode="aspectFit" />
+        </view>
+      </view>
     </label>
-    <button class="password-switch" bindtap="togglePassword">{{showPassword ? '隐藏密码' : '显示密码'}}</button>
 
-    <view wx:if="{{error}}" class="form-error">{{error}}</view>
+    <view wx:if="{{error}}" class="form-error"><text>!</text><view>{{error}}</view></view>
     <button class="primary-button submit-button" loading="{{busy}}" disabled="{{busy || nickname.length < 2 || password.length < 6}}" bindtap="submit">
-      {{busy ? '请稍候…' : mode === 'register' ? '注册并进入日历' : '登录'}}
+      <text>{{mode === 'register' ? '＋' : '↪'}}</text>{{busy ? (mode === 'register' ? '正在注册…' : '正在登录…') : mode === 'register' ? '注册并进入日历' : '登录'}}
     </button>
-    <navigator class="privacy-link" url="/pages/privacy/privacy">查看隐私保护说明</navigator>
+
+    <view class="security-note">
+      <text class="shield">◇</text>
+      <view><text class="security-title">安全说明</text><text>密码仅以不可逆哈希保存；账号资料以云端数据为准，可在多个设备登录并自动同步。</text></view>
+    </view>
+    <navigator class="privacy-link" url="/pages/privacy/privacy">隐私政策</navigator>
   </view>
 </view>

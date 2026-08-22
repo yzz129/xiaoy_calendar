@@ -33,7 +33,11 @@
 }
 
 .status-button {
+  box-sizing: border-box;
   min-height: 76rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 22rpx;
   background: #f2f6f9;
   color: #6c8296;
@@ -116,6 +120,7 @@
   background: transparent;
   color: #e66c5f;
   font-size: 22rpx;
+  text-align: center;
 }
 
 .task-item {

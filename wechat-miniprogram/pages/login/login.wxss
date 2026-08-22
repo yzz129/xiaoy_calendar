@@ -1,90 +1,109 @@
 .login-page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 70rpx 36rpx;
-  display: flex;
-  align-items: center;
-  background: radial-gradient(circle at 50% 0%, #dcfff3 0, #f4fbff 52%, #fffaf1 100%);
+  padding: 20rpx;
+  background:
+    radial-gradient(circle at 36rpx 36rpx, rgba(87, 169, 232, .08) 2rpx, transparent 3rpx) 0 0 / 68rpx 68rpx,
+    linear-gradient(135deg, #f8fcfb, #eef8ff 52%, #fffaf0);
 }
 
 .login-card {
+  min-height: calc(100vh - 40rpx);
   box-sizing: border-box;
-  width: 100%;
-  padding: 50rpx 42rpx 38rpx;
+  overflow: hidden;
+  position: relative;
+  padding: 40rpx 32rpx;
+  border: 2rpx solid var(--line);
+  border-top: 14rpx solid var(--mint);
+  border-radius: 40rpx 32rpx 44rpx 30rpx;
+  background: var(--paper);
+  box-shadow: 10rpx 12rpx 0 rgba(220, 231, 238, .8);
 }
 
-.brand-icon {
-  width: 150rpx;
-  height: 150rpx;
-  margin: 0 auto;
-  display: block;
-  border-radius: 38rpx;
+.tape {
+  width: 190rpx;
+  height: 28rpx;
+  position: absolute;
+  top: -8rpx;
+  left: 12%;
+  background: rgba(255, 217, 104, .84);
+  transform: rotate(-2deg);
 }
 
-.brand-name {
-  margin-top: 24rpx;
-  text-align: center;
-  font-size: 52rpx;
-  font-weight: 900;
-  letter-spacing: 4rpx;
+.auth-brand,
+.brand-logo,
+.brand-copy,
+.field-label,
+.submit-button,
+.security-note {
+  display: flex;
+  align-items: center;
 }
 
-.brand-copy {
-  margin-top: 10rpx;
-  color: #7f95a9;
-  text-align: center;
-  font-size: 26rpx;
+.auth-brand { justify-content: space-between; gap: 24rpx; }
+.brand-logo { position: relative; gap: 14rpx; font-family: "XY Doodle", "XY Rounded", sans-serif; font-size: 43rpx; letter-spacing: 3rpx; }
+.brand-logo::after { content: ''; width: 166rpx; height: 7rpx; position: absolute; right: 0; bottom: -9rpx; border-radius: 50%; background: var(--mint); transform: rotate(-1deg); }
+.brand-cloud { color: var(--ink); font-family: sans-serif; font-size: 53rpx; line-height: 1; }
+.brand-copy { gap: 9rpx; color: var(--mint-dark); font-size: 22rpx; font-weight: 800; }
+
+.auth-hero {
+  margin: 48rpx 0 42rpx;
+  padding: 30rpx 28rpx;
+  display: grid;
+  grid-template-columns: 164rpx 1fr;
+  align-items: center;
+  gap: 24rpx;
+  border-radius: 44rpx 36rpx 48rpx 34rpx;
+  background: var(--mint-soft);
 }
+
+.mascot-stage { width: 164rpx; height: 152rpx; display: flex; align-items: center; justify-content: center; }
+.hero-mascot { width: 156rpx; height: 148rpx; filter: drop-shadow(0 12rpx 10rpx rgba(22, 50, 79, .11)); }
+.hero-copy { min-width: 0; display: flex; flex-direction: column; }
+.hero-eyebrow { color: var(--mint-dark); font-size: 21rpx; font-weight: 900; letter-spacing: 5rpx; }
+.hero-title { margin-top: 4rpx; font-family: "XY Doodle", "XY Rounded", sans-serif; font-size: 49rpx; line-height: 1.15; }
+.hero-description { margin-top: 12rpx; color: var(--text); font-size: 20rpx; line-height: 1.7; }
 
 .mode-tabs {
-  margin-top: 40rpx;
-  padding: 8rpx;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10rpx;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8rpx;
-  border-radius: 26rpx;
-  background: #edf4f8;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 30rpx 24rpx 32rpx 22rpx;
+  background: var(--paper-soft);
 }
 
-.mode-tab {
-  min-height: 74rpx;
-  border-radius: 20rpx;
-  background: transparent;
-  color: #7890a4;
-  font-weight: 700;
-}
+.mode-tab { box-sizing: border-box; width: 100%; min-width: 0; min-height: 82rpx; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; gap: 10rpx; overflow: hidden; border-radius: 22rpx 18rpx 24rpx 16rpx; background: transparent; color: var(--text); font-size: 27rpx; font-weight: 900; }
+.mode-tab.active { color: var(--ink); border: 2rpx solid var(--mint-dark); background: var(--mint-soft); box-shadow: inset 0 -6rpx 0 var(--mint); }
+.tab-icon { font-family: sans-serif; font-size: 29rpx; }
 
-.mode-tab.active {
-  background: #fff;
-  color: #153454;
-  box-shadow: 0 4rpx 12rpx rgba(21, 52, 84, 0.08);
-}
+.field { margin-top: 28rpx; }
+.field-label { margin-bottom: 12rpx; gap: 10rpx; color: var(--text); font-size: 23rpx; font-weight: 800; }
+.input { min-height: 96rpx; padding: 0 30rpx; border: 2rpx solid var(--line); border-radius: 26rpx 20rpx 28rpx 18rpx; background: var(--paper-soft); font-size: 27rpx; }
+.password-field { position: relative; }
+.password-field .input { padding-right: 92rpx; }
+.password-switch { width: 60rpx; height: 60rpx; z-index: 2; position: absolute; top: 18rpx; right: 18rpx; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text); }
+.password-switch-hover { background: rgba(121, 221, 189, .18); }
+.password-eye { width: 34rpx; height: 34rpx; display: block; }
 
-.password-switch {
-  padding: 18rpx 0 0;
-  background: transparent;
-  color: #66829b;
-  text-align: right;
-  font-size: 24rpx;
-  line-height: 1;
-}
+.form-error { margin-top: 24rpx; padding: 20rpx 24rpx; display: grid; grid-template-columns: 34rpx 1fr; gap: 12rpx; border-radius: 22rpx; background: var(--coral-soft); color: #bd493a; font-size: 22rpx; font-weight: 800; line-height: 1.5; }
+.form-error > text { width: 32rpx; height: 32rpx; border: 2rpx solid currentColor; border-radius: 50%; text-align: center; line-height: 30rpx; }
+.submit-button { min-height: 96rpx; margin: 32rpx 8rpx 0; gap: 12rpx; border-radius: 26rpx 20rpx 28rpx 18rpx; font-size: 28rpx; font-weight: 900; }
+.submit-button[disabled] { opacity: .5; box-shadow: none; }
 
-.form-error {
-  margin-top: 22rpx;
-  padding: 18rpx 22rpx;
-  border-radius: 18rpx;
-  background: #fff0ee;
-  color: #d95e50;
-  font-size: 25rpx;
-}
+.security-note { margin-top: 38rpx; padding: 26rpx; align-items: center; gap: 18rpx; border: 2rpx dashed var(--line); border-radius: 26rpx 22rpx 28rpx 20rpx; color: var(--text); font-size: 20rpx; line-height: 1.65; }
+.security-note view { display: flex; flex-direction: column; gap: 4rpx; }
+.shield { flex: 0 0 auto; color: var(--mint-dark); font-family: sans-serif; font-size: 34rpx; }
+.security-title { color: var(--ink); font-weight: 900; }
+.privacy-link { padding-top: 28rpx; color: var(--text); text-align: center; font-size: 21rpx; }
 
-.submit-button {
-  margin-top: 32rpx;
-}
-
-.privacy-link {
-  padding-top: 28rpx;
-  color: #7890a4;
-  text-align: center;
-  font-size: 24rpx;
+@media (max-width: 360px) {
+  .auth-hero { grid-template-columns: 142rpx 1fr; padding-inline: 20rpx; }
+  .mascot-stage { width: 142rpx; }
+  .hero-mascot { width: 138rpx; }
+  .hero-title { font-size: 43rpx; }
+  .brand-copy { display: none; }
 }

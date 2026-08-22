@@ -131,7 +131,15 @@ powershell -ExecutionPolicy Bypass -File scripts/build-store-release.ps1
 
 ## 微信小程序
 
-原生微信小程序工程位于 `wechat-miniprogram/`，使用现有“小Y壁纸”AppID 并已替换为“小Y日历”的名称、图标、API 域名和页面代码。该账号为个人主体，因此工程不使用个人主体无法发布的 `web-view`，而是通过 `https://calendar.yzzwnw.asia` 的 API 与网页、APK 共用账号和云端数据。
+原生微信小程序工程位于 `wechat-miniprogram/`，使用现有微信小程序 AppID，并已统一为“小Y日历”的名称、图标、API 域名和原生页面代码。该账号为个人主体，因此工程不使用个人主体无法发布的 `web-view`，而是通过 `https://calendar.yzzwnw.asia` 的 API 与网页、APK 共用账号和云端数据。
+
+当前微信小程序开发版本为 **2.1.5**，已包含：
+
+- 登录、注册、月历、日期底部抽屉、每日状态、工期统计、便签和规划中心
+- 与网页端共用的账号、云端数据和管理员后台，管理员账号可直接进入原生管理页面
+- 网页端同款全量字体、图标和五种宠物形态：待命、专注、思考、庆祝、休息
+- 可拖动、隐藏并再次唤回的宠物，以及支持自由调整大小的气泡聊天框
+- 手机安全区、窄屏布局和页面边界适配
 
 ```bash
 npm run validate:miniprogram

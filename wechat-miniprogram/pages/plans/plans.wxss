@@ -25,6 +25,10 @@
 .create-card {
   margin-top: 24rpx;
 }
+.type-row { margin-top: 22rpx; display: grid; grid-template-columns: 1fr 1fr; gap: 12rpx; }
+.type-row view { min-height: 70rpx; display: flex; align-items: center; justify-content: center; gap: 9rpx; border: 2rpx solid var(--line); border-radius: 20rpx; color: var(--muted); font-weight: 900; }
+.type-row view.active { border-color: var(--mint); background: var(--mint-soft); color: var(--ink); box-shadow: 3rpx 4rpx 0 var(--mint); }
+.type-row image { width: 28rpx; height: 28rpx; }
 
 .date-row {
   display: grid;
@@ -58,6 +62,9 @@
   background: #edf4f8;
   color: #7890a4;
   font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .weekday-button.active {
@@ -68,6 +75,7 @@
 .create-button {
   margin-top: 30rpx;
 }
+.create-button.disabled { opacity: .45; box-shadow: none; }
 
 .plan-list {
   margin-top: 24rpx;
@@ -135,7 +143,7 @@
   font-size: 22rpx;
 }
 
-.plan-foot button {
+.plan-foot view {
   padding: 8rpx 0;
   background: transparent;
   color: #e66c5f;

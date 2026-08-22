@@ -1,20 +1,36 @@
 page {
-  --ink: #153454;
-  --muted: #8fa3b6;
-  --line: #dbe7ef;
-  --mint: #2bc099;
-  --mint-soft: #e8faf4;
+  --paper: #ffffff;
+  --paper-soft: #fbfdfc;
+  --ink: #16324f;
+  --text: #536b80;
+  --muted: #91a2b1;
+  --line: #dce7ee;
+  --mint: #79ddbd;
+  --mint-dark: #20b88a;
+  --mint-soft: #e8f8f2;
+  --coral: #ff806d;
+  --coral-soft: #fff0ed;
   --blue-soft: #edf7ff;
-  --yellow: #ffd965;
+  --yellow: #ffd968;
   min-height: 100%;
-  background: #f4fbff;
+  background: #f8fcfb;
   color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "XY Rounded", "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 
 button {
   margin: 0;
   font: inherit;
+}
+
+input,
+textarea {
+  font-family: "XY Rounded", "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+.xy-placeholder {
+  color: var(--muted);
+  font-family: "XY Rounded", "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 
 button::after {
@@ -24,14 +40,14 @@ button::after {
 .page-shell {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 28rpx;
+  padding: 20rpx;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--paper);
   border: 2rpx solid var(--line);
-  border-radius: 36rpx;
-  box-shadow: 0 14rpx 0 rgba(21, 52, 84, 0.06);
+  border-radius: 30rpx 24rpx 34rpx 22rpx;
+  box-shadow: 10rpx 12rpx 0 rgba(220, 231, 238, 0.8);
 }
 
 .primary-button,
@@ -47,7 +63,9 @@ button::after {
 
 .primary-button {
   background: var(--mint);
-  color: #fff;
+  color: var(--ink);
+  border: 2rpx solid var(--ink);
+  box-shadow: 6rpx 7rpx 0 var(--ink);
 }
 
 .secondary-button {

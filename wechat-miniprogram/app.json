@@ -5,6 +5,7 @@
     "pages/day/day",
     "pages/plans/plans",
     "pages/profile/profile",
+    "pages/admin/admin",
     "pages/privacy/privacy"
   ],
   "window": {

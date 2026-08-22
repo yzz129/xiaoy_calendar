@@ -1,7 +1,7 @@
 {
   "appid": "wxfb514417ee21e094",
   "projectname": "小Y日历",
-  "description": "小Y日历微信小程序",
+  "description": "日历、日程规划、每日记录与时间管理工具",
   "compileType": "miniprogram",
   "miniprogramRoot": "./",
   "setting": {
@@ -11,7 +11,29 @@
     "postcss": true,
     "minified": true,
     "coverView": true,
-    "lazyloadPlaceholderEnable": false
+    "lazyloadPlaceholderEnable": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
-  "condition": {}
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {}
 }

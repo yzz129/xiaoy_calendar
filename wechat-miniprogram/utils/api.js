@@ -1,6 +1,16 @@
 const API_ORIGIN = 'https://calendar.yzzwnw.asia'
 const TOKEN_KEY = 'xiaoy-calendar-session-token:v1'
 
+function networkErrorMessage(message) {
+  const detail = String(message || '')
+  if (/url not in domain list/i.test(detail)) {
+    return '服务器域名尚未在微信后台生效，请将 calendar.yzzwnw.asia 加入 request 合法域名后重试'
+  }
+  if (/timeout/i.test(detail)) return '连接服务器超时，请检查网络后重试'
+  if (/fail/i.test(detail)) return '暂时无法连接服务器，请检查网络或稍后重试'
+  return detail || '网络连接失败'
+}
+
 function request(path, options = {}) {
   const token = wx.getStorageSync(TOKEN_KEY)
   const method = String(options.method || 'GET').toUpperCase()
@@ -28,10 +38,10 @@ function request(path, options = {}) {
         reject(error)
       },
       fail(result) {
-        reject(new Error(result.errMsg || '网络连接失败'))
+        reject(new Error(networkErrorMessage(result.errMsg)))
       },
     })
   })
 }
 
-module.exports = { API_ORIGIN, request }
+module.exports = { API_ORIGIN, request, networkErrorMessage }

@@ -30,6 +30,9 @@ Thumbs.db
 # WeChat DevTools local preferences
 wechat-miniprogram/project.private.config.json
 
+# Local WeChat preview/upload records and QR codes
+artifacts/
+
 # Android local/build output
 android/.gradle/
 android/build/

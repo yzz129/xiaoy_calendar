@@ -34,34 +34,68 @@ function normalizeSnapshot(value) {
   }
 }
 
+function loadBrandFonts() {
+  if (!wx.loadFontFace) return
+  const fonts = [
+    ['XY Doodle', 'https://calendar.yzzwnw.asia/fonts/xy-doodle-full.woff?v=2.0.3'],
+    ['XY Rounded', 'https://calendar.yzzwnw.asia/fonts/xy-rounded-full.woff?v=2.0.3'],
+  ]
+  fonts.forEach(([family, source]) => wx.loadFontFace({
+    family,
+    source: `url("${source}")`,
+    global: true,
+    desc: {
+      style: 'normal',
+      weight: 'normal',
+    },
+    success: () => console.info(`${family} 字体加载成功`),
+    fail: (error) => console.warn(`${family} 字体加载失败`, error.errMsg || error),
+  }))
+}
+
 App({
   globalData: {
     user: null,
     snapshot: emptySnapshot(),
     syncReady: false,
+    sessionCheckedAt: 0,
   },
 
   onLaunch() {
     this.globalData.user = wx.getStorageSync(STORAGE_KEYS.user) || null
     this.globalData.snapshot = normalizeSnapshot(wx.getStorageSync(STORAGE_KEYS.snapshot))
+    loadBrandFonts()
   },
 
   hasSession() {
     return Boolean(wx.getStorageSync(STORAGE_KEYS.token))
   },
 
-  async ensureSession() {
+  async ensureSession(options = {}) {
     if (!this.hasSession()) return null
-    try {
-      const payload = await api.request('/api/auth/session')
-      this.globalData.user = payload.user
-      wx.setStorageSync(STORAGE_KEYS.user, payload.user)
+    const maxAge = Number(options.maxAge ?? 60000)
+    const cachedUser = this.globalData.user
+    if (cachedUser && Date.now() - this.globalData.sessionCheckedAt < maxAge) {
       if (!this.globalData.syncReady) await this.pullSnapshot()
-      return payload.user
-    } catch (error) {
-      if (error.statusCode === 401) this.clearSession()
-      throw error
+      return cachedUser
     }
+    if (this.sessionPromise) return this.sessionPromise
+    this.sessionPromise = (async () => {
+      try {
+        const payload = await api.request('/api/auth/session')
+        this.globalData.user = payload.user
+        this.globalData.sessionCheckedAt = Date.now()
+        wx.setStorageSync(STORAGE_KEYS.user, payload.user)
+        if (!this.globalData.syncReady) await this.pullSnapshot()
+        return payload.user
+      } catch (error) {
+        if (error.statusCode === 401) this.clearSession()
+        throw error
+      } finally {
+        this.sessionPromise = null
+      }
+    })()
+    return this.sessionPromise
   },
 
   async login(nickname, password) {
@@ -73,6 +107,7 @@ App({
     wx.setStorageSync(STORAGE_KEYS.token, payload.token)
     wx.setStorageSync(STORAGE_KEYS.user, payload.user)
     this.globalData.user = payload.user
+    this.globalData.sessionCheckedAt = Date.now()
     await this.pullSnapshot()
     return payload.user
   },
@@ -86,6 +121,7 @@ App({
     wx.setStorageSync(STORAGE_KEYS.token, payload.token)
     wx.setStorageSync(STORAGE_KEYS.user, payload.user)
     this.globalData.user = payload.user
+    this.globalData.sessionCheckedAt = Date.now()
     await this.pullSnapshot()
     return payload.user
   },
@@ -142,5 +178,6 @@ App({
     this.globalData.user = null
     this.globalData.snapshot = emptySnapshot()
     this.globalData.syncReady = false
+    this.globalData.sessionCheckedAt = 0
   },
 })

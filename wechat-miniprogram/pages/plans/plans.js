@@ -43,7 +43,7 @@ function presentPlans(snapshot) {
 
 Page({
   data: {
-    form: { title: '', dailyTask: '', start: '', end: '' },
+    form: { title: '', dailyTask: '', start: '', end: '', type: 'study' },
     weekdays: WEEKDAYS.map((item) => ({ ...item, active: item.value > 0 && item.value < 6 })),
     plans: [],
   },
@@ -66,6 +66,10 @@ Page({
 
   inputField(event) {
     this.setData({ [`form.${event.currentTarget.dataset.field}`]: event.detail.value })
+  },
+
+  setType(event) {
+    this.setData({ 'form.type': event.currentTarget.dataset.type })
   },
 
   setStart(event) {
@@ -99,8 +103,8 @@ Page({
       start: this.data.form.start,
       end: this.data.form.end,
       weekdays,
-      type: 'study',
-      planType: 'study',
+      type: this.data.form.type === 'work' ? 'work' : 'study',
+      planType: this.data.form.type === 'work' ? 'work' : 'study',
       createdAt: new Date().toISOString(),
     }
     app.updateSnapshot((snapshot) => ({ ...snapshot, plans: [...snapshot.plans, plan] }))
