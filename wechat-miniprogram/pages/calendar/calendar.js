@@ -1,6 +1,8 @@
 const app = getApp()
 const api = require('../../utils/api')
 const share = require('../../utils/share')
+const { createTypewriterController } = require('../../utils/agent-typewriter')
+const { renderAgentRichText } = require('../../utils/agent-rich-text')
 const { WEEK_LABELS, monthCells, toKey, fromKey, dateTitle, rangeStats } = require('../../utils/date')
 
 const QUICK_PROMPTS = ['帮我安排一个学习计划', '根据我的空闲时间规划工作', '看看我这个月的安排']
@@ -120,6 +122,15 @@ function agentCalendarContext(page) {
   }
 }
 
+function decoratePetMessage(message) {
+  const content = String(message?.content || '')
+  return { ...message, content, blocks: renderAgentRichText(content) }
+}
+
+function apiPetMessages(messages) {
+  return (messages || []).filter((message) => message?.content).map((message) => ({ role: message.role, content: message.content }))
+}
+
 Page({
   data: {
     user: {}, loggedIn: false, isAdmin: false, year: 0, month: 0, monthTitle: '', weekLabels: WEEK_LABELS, cells: [],
@@ -127,7 +138,7 @@ Page({
     selectedKey: '', selectedTitle: '', daySheetTitle: '', selectedSummary: '待设置',
     dayOpen: false, dayTab: 'notes', dayEntry: { status: '', duration: 1 }, dayNotes: [], dayTasks: [], dayNewNote: '', dayComposeOpen: false,
     rangeOpen: false, rangeStart: '', rangeEnd: '', rangeStats: { workDays: 0, duration: 0 },
-    theme: 'light', petOpen: false, petInput: '', petBusy: false, petError: '',
+    theme: 'light', petOpen: false, petInput: '', petBusy: false, petError: '', petPhase: '待命', petScrollTarget: 'pet-chat-end-0',
     petMood: 'idle', petAmbientMood: 'idle', petCelebrating: false, petStatus: PET_STATUS.idle,
     petImage: PET_IMAGES.idle, petMessages: [], petResult: { questions: [], planDrafts: [] },
     petApplied: false, quickPrompts: QUICK_PROMPTS, petX: 0, petY: 0, petDragging: false,
@@ -143,6 +154,11 @@ Page({
     this.setData({
       year: today.getFullYear(), month: today.getMonth() + 1, selectedKey: toKey(today), rangeStart: bounds.start, rangeEnd: bounds.end,
       petAmbientMood, petMood: petAmbientMood, petImage: PET_IMAGES[petAmbientMood], petStatus: PET_STATUS[petAmbientMood],
+    })
+    this._petDisposed = false
+    this._petTypewriter = createTypewriterController({
+      interval: 18,
+      onUpdate: (id, content, streaming) => this.updatePetStreamMessage(id, content, streaming),
     })
     this.initPetPosition()
   },
@@ -168,6 +184,9 @@ Page({
 
   onHide() { this.stopPetMoodTimer() },
   onUnload() {
+    this._petDisposed = true
+    if (this._petStreamRequest?.abort) this._petStreamRequest.abort()
+    this._petTypewriter?.dispose()
     this.stopPetMoodTimer()
     clearTimeout(this._petTapTimer)
     clearTimeout(this._hiddenDragTapTimer)
@@ -584,21 +603,55 @@ Page({
   },
   closePet() { this.setData({ petOpen: false }, () => this.refreshPetMood()) },
   inputPet(event) { this.setData({ petInput: event.detail.value.slice(0, 1200), petError: '' }, () => this.refreshPetMood()) },
+  updatePetStreamMessage(id, content, streaming) {
+    if (this._petDisposed) return
+    const petMessages = this.data.petMessages.map((message) => (
+      message.id === id ? decoratePetMessage({ ...message, content, streaming }) : message
+    ))
+    const scrollStep = Math.floor(String(content || '').length / 6) % 2
+    this.setData({ petMessages, petScrollTarget: `pet-chat-end-${scrollStep}` })
+  },
   async sendPet(event) {
     if (this.data.petBusy) return
     const prompt = String(event?.currentTarget?.dataset?.prompt || this.data.petInput || '').trim()
     if (!prompt) return
     if (!this.requireLogin('AI 宠物聊天')) return
-    const previous = this.data.petMessages.slice(-18)
-    const messages = [...previous, { role: 'user', content: prompt }]
-    this.setData({ petInput: '', petBusy: true, petError: '', petCelebrating: false, petMessages: messages, petResult: { questions: [], planDrafts: [] }, petApplied: false }, () => this.refreshPetMood())
+    const previous = apiPetMessages(this.data.petMessages.slice(-18))
+    const streamId = `assistant-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    const messages = [
+      ...this.data.petMessages,
+      decoratePetMessage({ id: `user-${Date.now()}`, role: 'user', content: prompt, streaming: false }),
+      decoratePetMessage({ id: streamId, role: 'assistant', content: '', streaming: true }),
+    ].slice(-20)
+    this._petTypewriter.begin(streamId)
+    this.setData({
+      petInput: '', petBusy: true, petError: '', petPhase: '正在连接', petCelebrating: false,
+      petMessages: messages, petResult: { questions: [], planDrafts: [] }, petApplied: false,
+    }, () => this.refreshPetMood())
     try {
-      const payload = await api.request('/api/agent', { method: 'POST', data: { message: prompt, messages: previous, calendar: agentCalendarContext(this), stream: false } })
-      const reply = payload.reply || '我已经看过你的日历了。'
-      this.setData({ petMessages: [...messages, { role: 'assistant', content: reply }].slice(-20), petResult: payload })
+      const request = api.stream('/api/agent', {
+        method: 'POST',
+        data: { message: prompt, messages: previous, calendar: agentCalendarContext(this), stream: true },
+      }, {
+        status: (payload) => this.setData({ petPhase: payload?.message || '正在思考' }),
+        delta: (payload) => this._petTypewriter.push(streamId, payload?.text || ''),
+        reset: (payload) => this._petTypewriter.reset(streamId, payload?.text || ''),
+      })
+      this._petStreamRequest = request
+      const payload = await request
+      await this._petTypewriter.complete(streamId, payload.reply || '我已经看过你的日历了。')
+      this.setData({ petResult: payload, petPhase: '整理完成' })
       if (payload.planDrafts?.length) this.celebratePet()
-    } catch (error) { this.setData({ petError: error.message || '小Y 暂时没有回应，请稍后重试' }) }
-    finally { this.setData({ petBusy: false }, () => this.refreshPetMood()) }
+    } catch (error) {
+      this._petTypewriter.cancel(streamId)
+      const petMessages = this.data.petMessages.map((message) => (
+        message.id === streamId ? decoratePetMessage({ ...message, streaming: false }) : message
+      )).filter((message) => message.id !== streamId || message.content)
+      this.setData({ petMessages, petError: error.message || '小Y 暂时没有回应，请稍后重试' })
+    } finally {
+      this._petStreamRequest = null
+      this.setData({ petBusy: false, petPhase: '待命' }, () => this.refreshPetMood())
+    }
   },
   applyPetPlans() {
     const drafts = this.data.petResult?.planDrafts || []

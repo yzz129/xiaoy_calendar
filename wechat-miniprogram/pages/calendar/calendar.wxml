@@ -102,16 +102,27 @@
 
   <view wx:if="{{!petOpen && !petHidden}}" class="pet-quick-hide" style="left:{{petX}}px;top:{{petY}}px" catchtouchstart="stopPetEvent" catchtouchmove="stopPetEvent" catchtouchend="hidePet" catchtap="hidePet"><image src="/assets/icons/lucide/eye-off.svg"/></view>
   <view wx:if="{{!petHidden}}" class="pet-launcher mood-{{petMood}} {{petDragging ? 'is-dragging' : ''}}" data-pet-mood="{{petMood}}" style="left:{{petX}}px;top:{{petY}}px" bindtouchstart="startPetDrag" catchtouchmove="movePet" bindtouchend="endPetDrag" bindtouchcancel="endPetDrag" bindtap="togglePet">
-    <view class="pet-aura"></view><image class="pet-image" src="{{petImage}}" mode="aspectFit"/><text class="pet-ai">AI</text>
+    <view class="pet-aura"></view><text class="pet-spark one">✦</text><text class="pet-spark two">·</text><image class="pet-image" src="{{petImage}}" mode="aspectFit"/><text class="pet-ai">AI</text>
   </view>
   <view wx:else class="pet-launcher pet-recall is-hidden dock-{{petDockSide}} mood-{{petMood}} {{petDragging ? 'is-dragging' : ''}}" data-pet-mood="{{petMood}}" style="left:{{petHiddenX}}px;top:{{petY}}px" bindtouchstart="startHiddenPetDrag" catchtouchmove="moveHiddenPet" bindtouchend="endHiddenPetDrag" bindtouchcancel="endHiddenPetDrag" bindtap="showPet">
-    <view class="pet-aura"></view><image class="pet-image" src="{{petImage}}" mode="aspectFit"/><text class="pet-ai">AI</text>
+    <view class="pet-aura"></view><text class="pet-spark one">✦</text><text class="pet-spark two">·</text><image class="pet-image" src="{{petImage}}" mode="aspectFit"/><text class="pet-ai">AI</text>
   </view>
   <view class="pet-bubble {{bubblePlacement}} {{petOpen && !petHidden ? 'is-open' : ''}} {{bubbleResizing ? 'is-resizing' : ''}}" style="left:{{bubbleX}}px;top:{{bubbleY}}px;width:{{bubbleWidth}}px;height:{{bubbleHeight}}px;--pet-tail-x:{{bubbleTailX}}px">
-    <view class="pet-drawer-header"><view class="pet-avatar mood-{{petMood}}"><image src="{{petImage}}" mode="aspectFit"/></view><view><text class="pet-header-title">小Y Agent</text><text class="pet-header-status">{{petStatus}}</text></view><view class="pet-head-action" bindtap="hidePet"><image src="/assets/icons/lucide/eye-off.svg"/></view><view class="pet-close" bindtap="closePet"><image src="/assets/icons/lucide/x.svg"/></view></view>
-    <scroll-view class="pet-scroll" scroll-y>
+    <view class="pet-drawer-header"><view class="pet-avatar mood-{{petMood}}"><text class="pet-spark one">✦</text><image src="{{petImage}}" mode="aspectFit"/></view><view><text class="pet-header-title">小Y Agent</text><text class="pet-header-status">{{petBusy ? petPhase : petStatus}}</text></view><view class="pet-head-action" bindtap="hidePet"><image src="/assets/icons/lucide/eye-off.svg"/></view><view class="pet-close" bindtap="closePet"><image src="/assets/icons/lucide/x.svg"/></view></view>
+    <scroll-view class="pet-scroll" scroll-y scroll-into-view="{{petScrollTarget}}" scroll-with-animation>
       <view wx:if="{{!petMessages.length}}" class="pet-welcome"><image src="/assets/pet/agent-focused.png" mode="aspectFit"/><text class="pet-eyebrow">你的自由规划搭子</text><text class="pet-welcome-title">你说目标，小Y 来拆步骤、查资料、排时间</text><text>我会先看你的日历和已有规划；方案只有在你确认后才会写入。</text><view class="quick-list"><view class="quick-prompt" wx:for="{{quickPrompts}}" wx:key="*this" data-prompt="{{item}}" bindtap="sendPet">{{item}}</view></view></view>
-      <view wx:else class="pet-messages"><view wx:for="{{petMessages}}" wx:key="index" class="pet-message {{item.role}}">{{item.content}}</view><view wx:if="{{petBusy}}" class="pet-thinking">小Y 正在整理你的日历…</view></view>
+      <view wx:else class="pet-messages">
+        <view wx:for="{{petMessages}}" wx:key="id" wx:for-item="message" class="pet-message {{message.role}} {{message.streaming ? 'is-streaming' : ''}}">
+          <view class="pet-rich-text">
+            <view wx:for="{{message.blocks}}" wx:key="id" wx:for-item="block" class="pet-rich-row {{block.type}} level-{{block.level}}">
+              <text wx:if="{{block.marker}}" class="pet-rich-marker">{{block.marker}}</text>
+              <text wx:for="{{block.segments}}" wx:key="index" wx:for-item="segment" class="{{segment.strong ? 'is-strong' : ''}}">{{segment.text}}</text>
+            </view>
+            <text wx:if="{{message.streaming}}" class="pet-stream-caret"> </text>
+          </view>
+        </view>
+        <view id="pet-chat-end-0" class="pet-chat-anchor"></view><view id="pet-chat-end-1" class="pet-chat-anchor"></view>
+      </view>
       <view wx:if="{{petError}}" class="pet-error">{{petError}}</view>
       <view wx:if="{{petResult.questions.length}}" class="pet-followups"><text>还差一点信息</text><view class="pet-question" wx:for="{{petResult.questions}}" wx:key="*this" data-prompt="{{item}}：" bindtap="sendPet">{{item}}</view></view>
       <view wx:if="{{petResult.planDrafts.length}}" class="pet-plans"><text class="pet-section-heading">建议规划</text><view class="pet-plan-card" wx:for="{{petResult.planDrafts}}" wx:key="title"><text class="pet-plan-title">{{item.title}}</text><text>{{item.dailyTask}}</text><text>{{item.start}} 至 {{item.end}}</text></view><view class="apply-plans {{petApplied ? 'is-disabled' : ''}}" bindtap="applyPetPlans">{{petApplied ? '已写入规划中心' : '确认并写入规划中心'}}</view></view>
