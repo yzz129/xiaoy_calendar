@@ -1,4 +1,4 @@
-const SHARE_IMAGE_URL = '/assets/app-icon.png'
+const SHARE_IMAGE_URL = '/assets/share-cover.png'
 const CALENDAR_PATH = '/pages/calendar/calendar'
 
 function enableShareMenu() {

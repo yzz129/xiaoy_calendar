@@ -6,6 +6,7 @@ const root = resolve('wechat-miniprogram')
 const required = [
   'project.config.json', 'app.json', 'app.js', 'app.wxss', 'sitemap.json', 'README.md',
   'assets/app-icon.png',
+  'assets/share-cover.png',
   'assets/pet/empty-mascot.webp',
   'assets/pet/agent-focused.png', 'assets/pet/agent-thinking.png',
   'assets/pet/agent-celebrate.png', 'assets/pet/agent-sleepy.png',
@@ -39,7 +40,7 @@ if (/小Y壁纸|丰富的壁纸资源|tea\.qingnian8\.com|upload\.qiniu\.com|cdn
   throw new Error('仍存在旧小程序名称、介绍或域名')
 }
 if (!allText.includes('https://calendar.yzzwnw.asia')) throw new Error('未配置小Y日历 API 域名')
-if (!allText.includes('微信小程序 2.1.7')) throw new Error('小程序页面版本号未更新为 2.1.7')
+if (!allText.includes('微信小程序 2.1.8')) throw new Error('小程序页面版本号未更新为 2.1.8')
 if (!allText.includes('onShareAppMessage') || !allText.includes('onShareTimeline')) {
   throw new Error('小程序分享能力未完整配置')
 }
