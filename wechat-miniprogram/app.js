@@ -35,11 +35,11 @@ function normalizeSnapshot(value) {
 }
 
 function loadBrandFonts() {
-  if (!wx.loadFontFace) return
+  if (!wx.loadFontFace) return Promise.resolve(false)
   const origin = 'https://calendar.yzzwnw.asia/fonts'
   const load = (family, filename, quiet = false) => new Promise((resolve) => wx.loadFontFace({
     family,
-    source: `url("${origin}/${filename}?v=2.1.9")`,
+    source: `url("${origin}/${filename}?v=2.2.2")`,
     global: true,
     desc: { style: 'normal', weight: 'normal' },
     success: () => resolve(true),
@@ -49,15 +49,31 @@ function loadBrandFonts() {
     },
   }))
 
-  // 先加载为小程序裁剪的常用字形，首屏不再等待 10MB 全量字体；
-  // 常用字形可用后再用同名全量字体补齐生僻字，视觉和网页端保持一致。
+  // 常用字形与全量字形使用不同 family。全量字体后台加载时不会替换
+  // 已渲染的首屏字体，避免冷启动出现二次闪烁和布局重排。
   const fonts = [
-    ['XY Doodle', 'xy-doodle-miniprogram.woff', 'xy-doodle-full.woff'],
-    ['XY Rounded', 'xy-rounded-miniprogram.woff', 'xy-rounded-full.woff'],
+    ['XY Doodle', 'XY Doodle Full', 'xy-doodle-miniprogram.woff', 'xy-doodle-full.woff'],
+    ['XY Rounded', 'XY Rounded Full', 'xy-rounded-miniprogram.woff', 'xy-rounded-full.woff'],
   ]
-  fonts.forEach(([family, fastFile, fullFile]) => {
-    load(family, fastFile).then(() => setTimeout(() => load(family, fullFile, true), 240))
-  })
+  const fastLoads = fonts.map(([family, , fastFile]) => load(family, fastFile))
+  Promise.all(fastLoads).then(() => setTimeout(() => {
+    fonts.forEach(([, fullFamily, , fullFile]) => load(fullFamily, fullFile, true))
+  }, 1800))
+  return Promise.all(fastLoads)
+}
+
+const PET_ASSETS = [
+  '/assets/pet/agent-focused.png',
+  '/assets/pet/agent-thinking.png',
+  '/assets/pet/agent-celebrate.png',
+  '/assets/pet/agent-sleepy.png',
+]
+
+function preloadPetAssets() {
+  if (!wx.getImageInfo) return Promise.resolve(false)
+  return Promise.all(PET_ASSETS.map((src) => new Promise((resolve) => {
+    wx.getImageInfo({ src, success: () => resolve(true), fail: () => resolve(false) })
+  })))
 }
 
 App({
@@ -66,12 +82,15 @@ App({
     snapshot: emptySnapshot(),
     syncReady: false,
     sessionCheckedAt: 0,
+    brandFontsReady: null,
+    petAssetsReady: null,
   },
 
   onLaunch() {
     this.globalData.user = wx.getStorageSync(STORAGE_KEYS.user) || null
     this.globalData.snapshot = normalizeSnapshot(wx.getStorageSync(STORAGE_KEYS.snapshot))
-    loadBrandFonts()
+    this.globalData.brandFontsReady = loadBrandFonts()
+    this.globalData.petAssetsReady = preloadPetAssets()
   },
 
   hasSession() {

@@ -986,6 +986,35 @@ export async function onRequestGet({ request, env }) {
   if (requestOrigin(request) === null) return jsonResponse({ error: '不允许跨站调用' }, 403, request)
   const user = await authenticate(env, request)
   if (!user) return jsonResponse({ error: '请先登录' }, 401, request)
+  const url = new URL(request.url)
+  if (url.searchParams.get('history') === '1') {
+    const requestedLimit = Number.parseInt(url.searchParams.get('limit') || '30', 10)
+    const limit = Math.max(1, Math.min(50, Number.isFinite(requestedLimit) ? requestedLimit : 30))
+    const result = await env.DB.prepare(`SELECT id, role, content, provider, model, meta_json, created_at
+      FROM chat_messages
+      WHERE user_id = ? AND role IN ('user', 'assistant')
+      ORDER BY created_at DESC
+      LIMIT ?`).bind(user.id, limit).all()
+    const messages = (result?.results || []).reverse().map((row) => {
+      let meta = {}
+      try { meta = JSON.parse(row.meta_json || '{}') } catch { meta = {} }
+      return {
+        id: row.id,
+        role: row.role,
+        content: row.content,
+        provider: row.provider || meta?.provider?.name || '',
+        model: row.model || meta?.provider?.model || '',
+        createdAt: row.created_at,
+        status: meta.status || '',
+        questions: Array.isArray(meta.questions) ? meta.questions : [],
+        planDrafts: Array.isArray(meta.planDrafts) ? meta.planDrafts : [],
+        actionDrafts: Array.isArray(meta.actionDrafts) ? meta.actionDrafts : [],
+        sources: Array.isArray(meta.sources) ? meta.sources : [],
+        searchWarning: meta.searchWarning || '',
+      }
+    })
+    return jsonResponse({ ok: true, messages }, 200, request)
+  }
   return jsonResponse({
     ok: true,
     providers: availableProviders(env).map((provider) => provider.name),

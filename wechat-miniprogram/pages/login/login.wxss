@@ -41,7 +41,7 @@
 }
 
 .auth-brand { justify-content: space-between; gap: 24rpx; }
-.brand-logo { position: relative; gap: 14rpx; font-family: "XY Doodle", "XY Rounded", sans-serif; font-size: 43rpx; letter-spacing: 3rpx; }
+.brand-logo { position: relative; gap: 14rpx; font-family: "XY Doodle", "XY Doodle Full", "XY Rounded", "XY Rounded Full", sans-serif; font-size: 43rpx; letter-spacing: 3rpx; }
 .brand-logo::after { content: ''; width: 166rpx; height: 7rpx; position: absolute; right: 0; bottom: -9rpx; border-radius: 50%; background: var(--mint); transform: rotate(-1deg); }
 .brand-cloud { color: var(--ink); font-family: sans-serif; font-size: 53rpx; line-height: 1; }
 .brand-copy { gap: 9rpx; color: var(--mint-dark); font-size: 22rpx; font-weight: 800; }
@@ -61,7 +61,7 @@
 .hero-mascot { width: 156rpx; height: 148rpx; filter: drop-shadow(0 12rpx 10rpx rgba(22, 50, 79, .11)); }
 .hero-copy { min-width: 0; display: flex; flex-direction: column; }
 .hero-eyebrow { color: var(--mint-dark); font-size: 21rpx; font-weight: 900; letter-spacing: 5rpx; }
-.hero-title { margin-top: 4rpx; font-family: "XY Doodle", "XY Rounded", sans-serif; font-size: 49rpx; line-height: 1.15; }
+.hero-title { margin-top: 4rpx; font-family: "XY Doodle", "XY Doodle Full", "XY Rounded", "XY Rounded Full", sans-serif; font-size: 49rpx; line-height: 1.15; }
 .hero-description { margin-top: 12rpx; color: var(--text); font-size: 20rpx; line-height: 1.7; }
 
 .mode-tabs {

@@ -3,6 +3,7 @@ const api = require('../../utils/api')
 const share = require('../../utils/share')
 const { createTypewriterController } = require('../../utils/agent-typewriter')
 const { renderAgentRichText } = require('../../utils/agent-rich-text')
+const { HISTORY_LIMIT, historyKey, normalizeMessages, mergeHistories } = require('../../utils/agent-history')
 const { WEEK_LABELS, monthCells, toKey, fromKey, dateTitle, rangeStats } = require('../../utils/date')
 
 const QUICK_PROMPTS = ['帮我安排一个学习计划', '根据我的空闲时间规划工作', '看看我这个月的安排']
@@ -11,7 +12,7 @@ const PET_POSITION_KEY = 'xy-calendar-pet-position-v1'
 const PET_HIDDEN_KEY = 'xy-calendar-pet-hidden-v1'
 const PET_BUBBLE_SIZE_KEY = 'xy-calendar-pet-bubble-size-v1'
 const PET_IMAGES = {
-  idle: '/assets/pet/empty-mascot.webp',
+  idle: '/assets/pet/agent-focused.png',
   focused: '/assets/pet/agent-focused.png',
   thinking: '/assets/pet/agent-thinking.png',
   celebrate: '/assets/pet/agent-celebrate.png',
@@ -163,6 +164,7 @@ Page({
       onUpdate: (id, content, streaming) => this.updatePetStreamMessage(id, content, streaming),
     })
     this.initPetPosition()
+    this.restoreLocalPetHistory()
   },
 
   onShareAppMessage() {
@@ -178,14 +180,23 @@ Page({
     const loggedIn = app.hasSession()
     const needsInitialSync = loggedIn && !app.globalData.syncReady
     this.refreshView()
+    this.restoreLocalPetHistory()
     if (!loggedIn) return
     app.ensureSession({ maxAge: 5 * 60 * 1000 })
-      .then(() => { if (needsInitialSync) this.refreshView() })
+      .then(() => {
+        if (needsInitialSync) this.refreshView()
+        this.restoreLocalPetHistory()
+        return this.restoreCloudPetHistory()
+      })
       .catch(() => this.refreshView())
   },
 
-  onHide() { this.stopPetMoodTimer() },
+  onHide() {
+    this.persistPetHistory()
+    this.stopPetMoodTimer()
+  },
   onUnload() {
+    this.persistPetHistory()
     this._petDisposed = true
     if (this._petStreamRequest?.abort) this._petStreamRequest.abort()
     this._petTypewriter?.dispose()
@@ -658,6 +669,58 @@ Page({
     }
     this.setData(update)
   },
+  currentPetHistoryKey() {
+    return historyKey(app.globalData.user)
+  },
+  decoratePetHistory(messages) {
+    return normalizeMessages(messages, HISTORY_LIMIT).map((message) => decoratePetMessage(message))
+  },
+  latestPetResult(messages) {
+    const latest = [...messages].reverse().find((message) => message.role === 'assistant')
+    return latest ? {
+      questions: latest.questions || [],
+      planDrafts: latest.planDrafts || [],
+      actionDrafts: latest.actionDrafts || [],
+      sources: latest.sources || [],
+      searchWarning: latest.searchWarning || '',
+      provider: latest.provider || '',
+      model: latest.model || '',
+    } : { questions: [], planDrafts: [] }
+  },
+  restoreLocalPetHistory() {
+    const key = this.currentPetHistoryKey()
+    if (this._petHistoryKey === key && this.data.petMessages.length) return
+    this._petHistoryKey = key
+    const stored = wx.getStorageSync(key)
+    const petMessages = this.decoratePetHistory(stored?.messages || stored || [])
+    if (!petMessages.length) return
+    this.setData({ petMessages, petResult: this.latestPetResult(petMessages) })
+  },
+  persistPetHistory(messages = this.data.petMessages) {
+    const normalized = normalizeMessages(messages, HISTORY_LIMIT)
+    if (!normalized.length) return
+    try {
+      wx.setStorageSync(this.currentPetHistoryKey(), { updatedAt: Date.now(), messages: normalized })
+    } catch (error) {
+      console.warn('宠物聊天本地保存失败', error.errMsg || error)
+    }
+  },
+  async restoreCloudPetHistory() {
+    if (!app.hasSession()) return
+    const key = this.currentPetHistoryKey()
+    if (this._petHistorySyncedFor === key) return
+    this._petHistorySyncedFor = key
+    try {
+      const payload = await api.request(`/api/agent?history=1&limit=${HISTORY_LIMIT}`)
+      const merged = mergeHistories(payload.messages, this.data.petMessages, HISTORY_LIMIT)
+      const petMessages = this.decoratePetHistory(merged)
+      this.setData({ petMessages, petResult: this.latestPetResult(petMessages) })
+      this.persistPetHistory(petMessages)
+    } catch (error) {
+      this._petHistorySyncedFor = ''
+      console.warn('宠物聊天云端恢复失败', error.message || error)
+    }
+  },
   async sendPet(event) {
     if (this.data.petBusy) return
     const prompt = String(event?.currentTarget?.dataset?.prompt || this.data.petInput || '').trim()
@@ -665,17 +728,21 @@ Page({
     if (!this.requireLogin('AI 宠物聊天')) return
     const previous = apiPetMessages(this.data.petMessages.slice(-18))
     const streamId = `assistant-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    const createdAt = new Date().toISOString()
     const messages = [
       ...this.data.petMessages,
-      decoratePetMessage({ id: `user-${Date.now()}`, role: 'user', content: prompt, streaming: false }),
-      decoratePetMessage({ id: streamId, role: 'assistant', content: '', streaming: true }),
+      decoratePetMessage({ id: `user-${Date.now()}`, role: 'user', content: prompt, createdAt, streaming: false }),
+      decoratePetMessage({ id: streamId, role: 'assistant', content: '', createdAt, streaming: true }),
     ].slice(-20)
     this._petTypewriter.begin(streamId)
     this._petAutoFollow = true
     this.setData({
       petInput: '', petInputFocus: false, petBusy: true, petError: '', petPhase: '正在连接', petCelebrating: false,
       petMessages: messages, petResult: { questions: [], planDrafts: [] }, petApplied: false,
-    }, () => this.refreshPetMood())
+    }, () => {
+      this.persistPetHistory(messages)
+      this.refreshPetMood()
+    })
     try {
       const request = api.stream('/api/agent', {
         method: 'POST',
@@ -688,7 +755,22 @@ Page({
       this._petStreamRequest = request
       const payload = await request
       await this._petTypewriter.complete(streamId, payload.reply || '我已经看过你的日历了。')
-      this.setData({ petResult: payload, petPhase: '整理完成' }, () => {
+      const petMessages = this.data.petMessages.map((message) => (
+        message.id === streamId ? decoratePetMessage({
+          ...message,
+          streaming: false,
+          provider: payload.provider || '',
+          model: payload.model || '',
+          status: payload.status || '',
+          questions: payload.questions || [],
+          planDrafts: payload.planDrafts || [],
+          actionDrafts: payload.actionDrafts || [],
+          sources: payload.sources || [],
+          searchWarning: payload.searchWarning || '',
+        }) : message
+      ))
+      this.setData({ petMessages, petResult: payload, petPhase: '整理完成' }, () => {
+        this.persistPetHistory(petMessages)
         this.measurePetScrollViewport()
         wx.nextTick(() => this.scrollPetToEnd(true))
       })
@@ -698,7 +780,7 @@ Page({
       const petMessages = this.data.petMessages.map((message) => (
         message.id === streamId ? decoratePetMessage({ ...message, streaming: false }) : message
       )).filter((message) => message.id !== streamId || message.content)
-      this.setData({ petMessages, petError: error.message || '小Y 暂时没有回应，请稍后重试' })
+      this.setData({ petMessages, petError: error.message || '小Y 暂时没有回应，请稍后重试' }, () => this.persistPetHistory(petMessages))
     } finally {
       this._petStreamRequest = null
       this.setData({ petBusy: false, petPhase: '待命' }, () => this.refreshPetMood())

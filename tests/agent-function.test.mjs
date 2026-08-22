@@ -15,6 +15,24 @@ try {
           }
           return null
         },
+        async all() {
+          if (sql.includes('FROM chat_messages')) return {
+            results: [
+              {
+                id: 'assistant-1', role: 'assistant', content: '我先了解你的可用时间。',
+                provider: 'openrouter', model: 'free-test-model',
+                meta_json: JSON.stringify({ status: 'clarify', questions: ['每天可用多久？'] }),
+                created_at: '2026-08-22T10:01:00.000Z',
+              },
+              {
+                id: 'user-1', role: 'user', content: '帮我安排学习计划',
+                provider: null, model: null, meta_json: '{}',
+                created_at: '2026-08-22T10:00:00.000Z',
+              },
+            ],
+          }
+          return { results: [] }
+        },
         async run() { return { success: true } },
       }
     },
@@ -49,6 +67,15 @@ try {
   const capabilities = await capability.json()
   assert.deepEqual(capabilities.providers, ['openrouter', 'pollinations'])
   assert.equal(capabilities.imageGeneration, 'disabled_without_verified_zero_price_model')
+
+  const historyResponse = await onRequestGet({
+    request: new Request('https://calendar.yzzwnw.asia/api/agent?history=1&limit=30', { headers: authHeaders }),
+    env,
+  })
+  assert.equal(historyResponse.status, 200)
+  const history = await historyResponse.json()
+  assert.deepEqual(history.messages.map((message) => message.role), ['user', 'assistant'])
+  assert.equal(history.messages[1].questions[0], '每天可用多久？')
 
   const nativePreflight = await onRequestOptions({
     request: new Request('https://calendar.yzzwnw.asia/api/agent', {

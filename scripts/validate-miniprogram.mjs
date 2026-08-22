@@ -41,7 +41,7 @@ if (/小Y壁纸|丰富的壁纸资源|tea\.qingnian8\.com|upload\.qiniu\.com|cdn
   throw new Error('仍存在旧小程序名称、介绍或域名')
 }
 if (!allText.includes('https://calendar.yzzwnw.asia')) throw new Error('未配置小Y日历 API 域名')
-if (!allText.includes('微信小程序 2.1.9')) throw new Error('小程序页面版本号未更新为 2.1.9')
+if (!allText.includes('微信小程序 2.2.2')) throw new Error('小程序页面版本号未更新为 2.2.2')
 if (!allText.includes('toggleAgreement') || !allText.includes('暂不登录，先体验基础功能')) {
   throw new Error('未配置用户主动同意协议或游客体验入口')
 }
