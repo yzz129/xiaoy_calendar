@@ -39,7 +39,7 @@ if (/小Y壁纸|丰富的壁纸资源|tea\.qingnian8\.com|upload\.qiniu\.com|cdn
   throw new Error('仍存在旧小程序名称、介绍或域名')
 }
 if (!allText.includes('https://calendar.yzzwnw.asia')) throw new Error('未配置小Y日历 API 域名')
-if (!allText.includes('微信小程序 2.1.5')) throw new Error('小程序页面版本号未更新为 2.1.5')
+if (!allText.includes('微信小程序 2.1.6')) throw new Error('小程序页面版本号未更新为 2.1.6')
 
 const allowedWxmlTags = new Set(['view', 'text', 'image', 'button', 'navigator', 'input', 'textarea', 'label', 'picker', 'scroll-view'])
 for (const file of required.filter((item) => item.endsWith('.wxml'))) {

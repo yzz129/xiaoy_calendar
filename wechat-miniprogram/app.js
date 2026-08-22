@@ -36,21 +36,28 @@ function normalizeSnapshot(value) {
 
 function loadBrandFonts() {
   if (!wx.loadFontFace) return
-  const fonts = [
-    ['XY Doodle', 'https://calendar.yzzwnw.asia/fonts/xy-doodle-full.woff?v=2.0.3'],
-    ['XY Rounded', 'https://calendar.yzzwnw.asia/fonts/xy-rounded-full.woff?v=2.0.3'],
-  ]
-  fonts.forEach(([family, source]) => wx.loadFontFace({
+  const origin = 'https://calendar.yzzwnw.asia/fonts'
+  const load = (family, filename, quiet = false) => new Promise((resolve) => wx.loadFontFace({
     family,
-    source: `url("${source}")`,
+    source: `url("${origin}/${filename}?v=2.1.6")`,
     global: true,
-    desc: {
-      style: 'normal',
-      weight: 'normal',
+    desc: { style: 'normal', weight: 'normal' },
+    success: () => resolve(true),
+    fail: (error) => {
+      if (!quiet) console.warn(`${family} 字体加载失败`, error.errMsg || error)
+      resolve(false)
     },
-    success: () => console.info(`${family} 字体加载成功`),
-    fail: (error) => console.warn(`${family} 字体加载失败`, error.errMsg || error),
   }))
+
+  // 先加载为小程序裁剪的常用字形，首屏不再等待 10MB 全量字体；
+  // 常用字形可用后再用同名全量字体补齐生僻字，视觉和网页端保持一致。
+  const fonts = [
+    ['XY Doodle', 'xy-doodle-miniprogram.woff', 'xy-doodle-full.woff'],
+    ['XY Rounded', 'xy-rounded-miniprogram.woff', 'xy-rounded-full.woff'],
+  ]
+  fonts.forEach(([family, fastFile, fullFile]) => {
+    load(family, fastFile).then(() => setTimeout(() => load(family, fullFile, true), 240))
+  })
 }
 
 App({

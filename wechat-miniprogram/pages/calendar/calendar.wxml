@@ -5,12 +5,17 @@
       <view class="brand-name">小Y日历</view><view class="brand-stroke"></view>
     </view>
     <view class="header-actions">
-      <view class="action primary" bindtap="goToday">今天</view>
-      <view class="action plan" bindtap="openPlans"><image src="/assets/icons/lucide/clipboard-list.svg"/><text>规划中心</text><text wx:if="{{activePlanCount}}" class="badge">{{activePlanCount > 9 ? '9+' : activePlanCount}}</text></view>
-      <view class="icon-action" bindtap="toggleTheme"><image src="{{theme === 'light' ? '/assets/icons/lucide/moon-star.svg' : '/assets/icons/lucide/sun.svg'}}"/></view>
-      <view class="icon-action download" bindtap="copyDownload"><image src="/assets/icons/lucide/download.svg"/></view>
-      <view wx:if="{{isAdmin}}" class="icon-action admin" bindtap="openAdmin"><image src="/assets/icons/lucide/shield-check.svg"/></view>
-      <view class="account-chip"><view bindtap="openProfile"><image src="/assets/icons/lucide/user-round.svg"/></view><view bindtap="logout"><image src="/assets/icons/lucide/log-out.svg"/></view></view>
+      <view class="primary-actions">
+        <view class="action primary" bindtap="goToday">今天</view>
+        <view class="action plan" bindtap="openPlans"><image src="/assets/icons/lucide/clipboard-list.svg"/><text>规划中心</text><text wx:if="{{activePlanCount}}" class="badge">{{activePlanCount > 9 ? '9+' : activePlanCount}}</text></view>
+      </view>
+      <view class="utility-actions">
+        <view class="icon-action" aria-label="切换明暗模式" bindtap="toggleTheme"><image src="{{theme === 'light' ? '/assets/icons/lucide/moon-star.svg' : '/assets/icons/lucide/sun.svg'}}"/></view>
+        <view class="icon-action download" aria-label="下载应用" bindtap="copyDownload"><image src="/assets/icons/lucide/download.svg"/></view>
+        <view wx:if="{{isAdmin}}" class="icon-action labeled admin" bindtap="openAdmin"><image src="/assets/icons/lucide/shield-check.svg"/><text>后台</text></view>
+        <view class="icon-action labeled profile" bindtap="openProfile"><image src="/assets/icons/lucide/user-round.svg"/><text>我的</text></view>
+        <view class="icon-action logout" aria-label="退出登录" bindtap="logout"><image src="/assets/icons/lucide/log-out.svg"/></view>
+      </view>
     </view>
     <view class="month-switcher">
       <view class="month-control" data-offset="-1" bindtap="changeMonth"><image src="/assets/icons/lucide/chevron-left.svg"/></view>
