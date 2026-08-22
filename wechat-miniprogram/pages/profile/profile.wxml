@@ -1,0 +1,13 @@
+<view class="page-shell profile-page">
+  <view class="profile-card card">
+    <image src="/assets/app-icon.png" mode="aspectFit" />
+    <text>{{user.nickname}}</text>
+    <text class="profile-subtitle">小Y日历账号 · 数据已启用云端同步</text>
+  </view>
+  <view class="menu-card card">
+    <navigator url="/pages/privacy/privacy"><text>隐私保护说明</text><text>›</text></navigator>
+    <view><text>当前版本</text><text>微信小程序 1.0.0</text></view>
+    <view><text>数据服务域名</text><text>calendar.yzzwnw.asia</text></view>
+  </view>
+  <button class="danger-button logout-button" bindtap="logout">退出登录</button>
+</view>

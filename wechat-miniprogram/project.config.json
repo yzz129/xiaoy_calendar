@@ -1,0 +1,17 @@
+{
+  "appid": "wxfb514417ee21e094",
+  "projectname": "小Y日历",
+  "description": "小Y日历微信小程序",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "./",
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": false
+  },
+  "condition": {}
+}

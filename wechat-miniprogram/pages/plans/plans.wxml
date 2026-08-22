@@ -1,0 +1,33 @@
+<view class="page-shell plans-page">
+  <view class="intro-card card">
+    <text>规划中心</text>
+    <text class="intro-copy">创建一个目标，小Y会把每日任务显示在对应日期中。</text>
+  </view>
+
+  <view class="create-card card">
+    <view class="section-title">新建规划</view>
+    <label class="field"><text class="field-label">规划名称</text><input class="input" value="{{form.title}}" maxlength="40" placeholder="例如：30 天英语学习" data-field="title" bindinput="inputField" /></label>
+    <label class="field"><text class="field-label">每日任务</text><input class="input" value="{{form.dailyTask}}" maxlength="80" placeholder="例如：背 20 个单词" data-field="dailyTask" bindinput="inputField" /></label>
+    <view class="date-row">
+      <label class="field"><text class="field-label">开始日期</text><picker mode="date" value="{{form.start}}" bindchange="setStart"><view class="picker-value">{{form.start}}</view></picker></label>
+      <label class="field"><text class="field-label">结束日期</text><picker mode="date" value="{{form.end}}" bindchange="setEnd"><view class="picker-value">{{form.end}}</view></picker></label>
+    </view>
+    <view class="field">
+      <text class="field-label">执行日</text>
+      <view class="weekday-row">
+        <button wx:for="{{weekdays}}" wx:key="value" class="weekday-button {{item.active ? 'active' : ''}}" data-value="{{item.value}}" bindtap="toggleWeekday">{{item.label}}</button>
+      </view>
+    </view>
+    <button class="primary-button create-button" disabled="{{!form.title || !form.dailyTask}}" bindtap="createPlan">保存规划</button>
+  </view>
+
+  <view class="plan-list">
+    <view wx:for="{{plans}}" wx:key="id" class="plan-card card">
+      <view class="plan-head"><view><text>{{item.title}}</text><text class="plan-range">{{item.start}} 至 {{item.end}}</text></view><text class="plan-type">{{item.typeLabel}}</text></view>
+      <view class="daily-task">每天：{{item.dailyTask}}</view>
+      <view class="progress"><view style="width: {{item.percent}}%"></view></view>
+      <view class="plan-foot"><text>已完成 {{item.completed}} / {{item.total}}</text><button data-id="{{item.id}}" bindtap="removePlan">删除</button></view>
+    </view>
+    <view wx:if="{{!plans.length}}" class="empty-state card">还没有规划，先创建一个吧</view>
+  </view>
+</view>

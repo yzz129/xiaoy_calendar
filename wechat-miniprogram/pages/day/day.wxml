@@ -1,0 +1,50 @@
+<view class="page-shell day-page">
+  <view class="date-card card">
+    <text class="date-title">{{title}}</text>
+    <text class="date-subtitle">记录工作、休息、请假、工期与便签</text>
+  </view>
+
+  <view class="section-card card">
+    <view class="section-title">当天状态</view>
+    <view class="status-row">
+      <button class="status-button {{entry.status === 'work' ? 'active work' : ''}}" data-status="work" bindtap="setStatus">工作</button>
+      <button class="status-button {{entry.status === 'rest' ? 'active rest' : ''}}" data-status="rest" bindtap="setStatus">休息</button>
+      <button class="status-button {{entry.status === 'leave' ? 'active leave' : ''}}" data-status="leave" bindtap="setStatus">请假</button>
+      <button class="status-button" data-status="" bindtap="setStatus">清除</button>
+    </view>
+    <label wx:if="{{entry.status === 'work'}}" class="field duration-field">
+      <text class="field-label">工期（天）</text>
+      <input class="input" type="digit" value="{{entry.duration}}" bindblur="setDuration" />
+    </label>
+  </view>
+
+  <view class="section-card card">
+    <view class="section-heading">
+      <view><text class="section-title">便签</text><text class="section-count">{{notes.length}} 条</text></view>
+    </view>
+    <view class="note-compose">
+      <input class="input" value="{{newNote}}" maxlength="300" placeholder="记录这一天要做的事" bindinput="inputNote" confirm-type="done" bindconfirm="addNote" />
+      <button class="primary-button" bindtap="addNote">添加</button>
+    </view>
+    <view wx:if="{{notes.length}}" class="note-list">
+      <view wx:for="{{notes}}" wx:key="id" class="note-item {{item.done ? 'done' : ''}}">
+        <button class="note-check" data-id="{{item.id}}" bindtap="toggleNote">{{item.done ? '✓' : ''}}</button>
+        <text>{{item.text || '空便签'}}</text>
+        <button class="note-delete" data-id="{{item.id}}" bindtap="removeNote">删除</button>
+      </view>
+    </view>
+    <view wx:else class="empty-state">还没有便签</view>
+  </view>
+
+  <view class="section-card card">
+    <view class="section-heading"><view><text class="section-title">规划任务</text><text class="section-count">{{tasks.length}} 项</text></view></view>
+    <view wx:if="{{tasks.length}}" class="task-list">
+      <button wx:for="{{tasks}}" wx:key="key" class="task-item {{item.done ? 'done' : ''}}" data-plan="{{item.planId}}" data-progress="{{item.progressKey}}" bindtap="toggleTask">
+        <text class="task-check">{{item.done ? '✓' : ''}}</text>
+        <view><text>{{item.title}}</text><text class="task-plan-title">{{item.planTitle}}</text></view>
+      </button>
+    </view>
+    <view wx:else class="empty-state">当天没有规划任务</view>
+    <button class="secondary-button open-plans" bindtap="openPlans">打开规划中心</button>
+  </view>
+</view>

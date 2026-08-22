@@ -1,0 +1,28 @@
+<view class="login-page">
+  <view class="login-card card">
+    <image class="brand-icon" src="/assets/app-icon.png" mode="aspectFit" />
+    <view class="brand-name">小Y日历</view>
+    <view class="brand-copy">你的日历与规划搭子</view>
+
+    <view class="mode-tabs">
+      <button class="mode-tab {{mode === 'login' ? 'active' : ''}}" data-mode="login" bindtap="changeMode">登录</button>
+      <button class="mode-tab {{mode === 'register' ? 'active' : ''}}" data-mode="register" bindtap="changeMode">注册</button>
+    </view>
+
+    <label class="field">
+      <text class="field-label">昵称</text>
+      <input class="input" value="{{nickname}}" maxlength="20" placeholder="2—20 个中英文、数字、下划线或短横线" bindinput="inputNickname" />
+    </label>
+    <label class="field">
+      <text class="field-label">密码</text>
+      <input class="input" value="{{password}}" maxlength="72" password="{{!showPassword}}" placeholder="至少 6 位" bindinput="inputPassword" />
+    </label>
+    <button class="password-switch" bindtap="togglePassword">{{showPassword ? '隐藏密码' : '显示密码'}}</button>
+
+    <view wx:if="{{error}}" class="form-error">{{error}}</view>
+    <button class="primary-button submit-button" loading="{{busy}}" disabled="{{busy || nickname.length < 2 || password.length < 6}}" bindtap="submit">
+      {{busy ? '请稍候…' : mode === 'register' ? '注册并进入日历' : '登录'}}
+    </button>
+    <navigator class="privacy-link" url="/pages/privacy/privacy">查看隐私保护说明</navigator>
+  </view>
+</view>

@@ -1,6 +1,6 @@
 # 小Y日历
 
-一个把日历、工期统计、便签、学习/工作规划和 AI 助手放在一起的可爱效率应用。支持网页、PWA 与 Android，登录后以云端数据为主进行多端同步，同时保留基础日历的本地可用能力。
+一个把日历、工期统计、便签、学习/工作规划和 AI 助手放在一起的可爱效率应用。支持网页、PWA、Android 与微信小程序，登录后以云端数据为主进行多端同步，同时保留基础日历的本地可用能力。
 
 [![在线使用](https://img.shields.io/badge/在线使用-calendar.yzzwnw.asia-2fc49f?style=for-the-badge)](https://calendar.yzzwnw.asia/)
 [![下载 APK](https://img.shields.io/badge/下载-Android_APK-ff7c70?style=for-the-badge&logo=android&logoColor=white)](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-latest.apk?v=1.7)
@@ -129,6 +129,16 @@ powershell -ExecutionPolicy Bypass -File scripts/build-store-release.ps1
 
 签名证书、密码和本地构建产物已被 `.gitignore` 排除，不应提交到仓库。应用升级必须保持 `applicationId` 和签名证书不变，并提升 `versionCode`。
 
+## 微信小程序
+
+原生微信小程序工程位于 `wechat-miniprogram/`，使用现有“小Y壁纸”AppID 并已替换为“小Y日历”的名称、图标、API 域名和页面代码。该账号为个人主体，因此工程不使用个人主体无法发布的 `web-view`，而是通过 `https://calendar.yzzwnw.asia` 的 API 与网页、APK 共用账号和云端数据。
+
+```bash
+npm run validate:miniprogram
+```
+
+导入和微信后台配置说明见 [`wechat-miniprogram/README.md`](wechat-miniprogram/README.md)。
+
 ## Cloudflare 部署
 
 ```bash
@@ -146,6 +156,7 @@ functions/              Cloudflare Pages Functions API
 migrations/             D1 数据库迁移
 public/                  PWA、隐私政策与静态资源
 android/                 Capacitor Android 工程
+wechat-miniprogram/      原生微信小程序工程
 release/store-listing/   应用商店截图与上架资料
 scripts/                 Android 正式版构建脚本
 tests/                   日期、Agent 与会话相关测试
