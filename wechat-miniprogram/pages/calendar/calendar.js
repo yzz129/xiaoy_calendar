@@ -1,5 +1,6 @@
 const app = getApp()
 const api = require('../../utils/api')
+const share = require('../../utils/share')
 const { WEEK_LABELS, monthCells, toKey, fromKey, dateTitle, rangeStats } = require('../../utils/date')
 
 const QUICK_PROMPTS = ['帮我安排一个学习计划', '根据我的空闲时间规划工作', '看看我这个月的安排']
@@ -135,6 +136,7 @@ Page({
   },
 
   onLoad() {
+    share.enableShareMenu()
     const today = new Date()
     const bounds = monthBounds(today.getFullYear(), today.getMonth() + 1)
     const petAmbientMood = ambientPetMoods(today)[0]
@@ -143,6 +145,14 @@ Page({
       petAmbientMood, petMood: petAmbientMood, petImage: PET_IMAGES[petAmbientMood], petStatus: PET_STATUS[petAmbientMood],
     })
     this.initPetPosition()
+  },
+
+  onShareAppMessage() {
+    return share.appMessage({ title: '小Y日历｜你的日历与规划搭子' })
+  },
+
+  onShareTimeline() {
+    return share.timeline({ title: '小Y日历｜你的日历与规划搭子' })
   },
 
   onShow() {

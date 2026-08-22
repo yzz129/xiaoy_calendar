@@ -1,5 +1,6 @@
 const app = getApp()
 const api = require('../../utils/api')
+const share = require('../../utils/share')
 
 const SORTS = [
   { value: 'recent', label: '最近活跃' }, { value: 'registered', label: '最新注册' },
@@ -40,6 +41,7 @@ Page({
   },
 
   async onLoad() {
+    share.enableShareMenu()
     try {
       const user = await app.ensureSession()
       if (!user || user.role !== 'admin') {
@@ -48,6 +50,8 @@ Page({
       await this.loadUsers()
     } catch (error) { this.setData({ loading: false, error: error.message || '管理员登录已失效' }) }
   },
+  onShareAppMessage() { return share.appMessage() },
+  onShareTimeline() { return share.timeline() },
   async onPullDownRefresh() { await this.loadUsers(); wx.stopPullDownRefresh() },
   back() { wx.navigateBack() },
   async logout() { await app.logout(); wx.reLaunch({ url: '/pages/login/login' }) },

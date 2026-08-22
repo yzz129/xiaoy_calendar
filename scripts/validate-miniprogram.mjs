@@ -9,7 +9,7 @@ const required = [
   'assets/pet/empty-mascot.webp',
   'assets/pet/agent-focused.png', 'assets/pet/agent-thinking.png',
   'assets/pet/agent-celebrate.png', 'assets/pet/agent-sleepy.png',
-  'utils/api.js', 'utils/date.js',
+  'utils/api.js', 'utils/date.js', 'utils/share.js',
   'pages/login/login.js', 'pages/login/login.json', 'pages/login/login.wxml', 'pages/login/login.wxss',
   'pages/calendar/calendar.js', 'pages/calendar/calendar.json', 'pages/calendar/calendar.wxml', 'pages/calendar/calendar.wxss',
   'pages/day/day.js', 'pages/day/day.json', 'pages/day/day.wxml', 'pages/day/day.wxss',
@@ -39,7 +39,10 @@ if (/小Y壁纸|丰富的壁纸资源|tea\.qingnian8\.com|upload\.qiniu\.com|cdn
   throw new Error('仍存在旧小程序名称、介绍或域名')
 }
 if (!allText.includes('https://calendar.yzzwnw.asia')) throw new Error('未配置小Y日历 API 域名')
-if (!allText.includes('微信小程序 2.1.6')) throw new Error('小程序页面版本号未更新为 2.1.6')
+if (!allText.includes('微信小程序 2.1.7')) throw new Error('小程序页面版本号未更新为 2.1.7')
+if (!allText.includes('onShareAppMessage') || !allText.includes('onShareTimeline')) {
+  throw new Error('小程序分享能力未完整配置')
+}
 
 const allowedWxmlTags = new Set(['view', 'text', 'image', 'button', 'navigator', 'input', 'textarea', 'label', 'picker', 'scroll-view'])
 for (const file of required.filter((item) => item.endsWith('.wxml'))) {

@@ -1,4 +1,5 @@
 const app = getApp()
+const share = require('../../utils/share')
 
 Page({
   data: {
@@ -11,7 +12,16 @@ Page({
   },
 
   onLoad() {
+    share.enableShareMenu()
     if (app.hasSession()) wx.reLaunch({ url: '/pages/calendar/calendar' })
+  },
+
+  onShareAppMessage() {
+    return share.appMessage()
+  },
+
+  onShareTimeline() {
+    return share.timeline()
   },
 
   changeMode(event) {

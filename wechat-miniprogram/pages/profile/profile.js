@@ -1,8 +1,12 @@
 const app = getApp()
 const api = require('../../utils/api')
+const share = require('../../utils/share')
 
 Page({
   data: { user: {}, isAdmin: false, form: { nickname: '', currentPassword: '', newPassword: '' }, saving: false },
+  onLoad() { share.enableShareMenu() },
+  onShareAppMessage() { return share.appMessage() },
+  onShareTimeline() { return share.timeline() },
   onShow() {
     const user = app.globalData.user || {}
     this.setData({ user, isAdmin: user.role === 'admin', form: { nickname: user.nickname || '', currentPassword: '', newPassword: '' } })

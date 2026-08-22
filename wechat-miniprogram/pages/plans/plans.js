@@ -1,5 +1,6 @@
 const app = getApp()
 const { toKey, fromKey } = require('../../utils/date')
+const share = require('../../utils/share')
 
 const WEEKDAYS = [
   { value: 1, label: '一' }, { value: 2, label: '二' }, { value: 3, label: '三' },
@@ -49,6 +50,7 @@ Page({
   },
 
   onLoad() {
+    share.enableShareMenu()
     const today = new Date()
     this.setData({
       'form.start': toKey(today),
@@ -66,6 +68,14 @@ Page({
 
   inputField(event) {
     this.setData({ [`form.${event.currentTarget.dataset.field}`]: event.detail.value })
+  },
+
+  onShareAppMessage() {
+    return share.appMessage({ title: '小Y日历｜规划中心', path: '/pages/plans/plans' })
+  },
+
+  onShareTimeline() {
+    return share.timeline({ title: '小Y日历｜规划中心' })
   },
 
   setType(event) {

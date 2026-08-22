@@ -1,5 +1,6 @@
 const app = getApp()
 const { dateTitle, fromKey } = require('../../utils/date')
+const share = require('../../utils/share')
 
 function tasksForDate(snapshot, dateKey) {
   const weekday = fromKey(dateKey).getDay()
@@ -29,12 +30,29 @@ Page({
   },
 
   onLoad(options) {
+    share.enableShareMenu()
     const dateKey = /^\d{4}-\d{2}-\d{2}$/.test(options.date || '') ? options.date : ''
     if (!dateKey) {
       wx.navigateBack()
       return
     }
     this.setData({ dateKey, title: dateTitle(dateKey) })
+  },
+
+  onShareAppMessage() {
+    const dateKey = this.data.dateKey
+    return share.appMessage({
+      title: `${this.data.title || '日期详情'}｜小Y日历`,
+      path: dateKey ? `/pages/day/day?date=${dateKey}` : share.CALENDAR_PATH,
+    })
+  },
+
+  onShareTimeline() {
+    const dateKey = this.data.dateKey
+    return share.timeline({
+      title: `${this.data.title || '日期详情'}｜小Y日历`,
+      query: dateKey ? `date=${dateKey}` : '',
+    })
   },
 
   onShow() {
