@@ -173,6 +173,90 @@ function extractJson(text) {
   return JSON.parse(candidate)
 }
 
+function cleanRecoveredQuestion(value) {
+  return compactText(
+    String(value || '')
+      .replace(/^\s*(?:[-*]\s*)?\d{1,2}[.、）)]\s*/, '')
+      .replace(/\*\*/g, ''),
+    160,
+  )
+}
+
+function extractStringArrayField(text, field) {
+  const raw = String(text || '')
+  const fieldMatch = new RegExp(`["']?${field}["']?\\s*:?\\s*\\[`, 'i').exec(raw)
+  if (!fieldMatch) return []
+  const start = fieldMatch.index + fieldMatch[0].lastIndexOf('[') + 1
+  const values = []
+  let quote = ''
+  let escaped = false
+  let current = ''
+  for (let index = start; index < raw.length && values.length < 3; index += 1) {
+    const character = raw[index]
+    if (!quote) {
+      if (character === ']') break
+      if (character === '"' || character === "'") {
+        quote = character
+        current = ''
+      }
+      continue
+    }
+    if (escaped) {
+      escaped = false
+      const mapped = { n: '\n', r: '\r', t: '\t', '"': '"', "'": "'", '\\': '\\', '/': '/' }
+      current += mapped[character] ?? character
+      continue
+    }
+    if (character === '\\') {
+      escaped = true
+      continue
+    }
+    if (character === quote) {
+      const question = cleanRecoveredQuestion(current)
+      if (question) values.push(question)
+      quote = ''
+      current = ''
+      continue
+    }
+    current += character
+  }
+  return values
+}
+
+function extractQuestionsFromReply(reply) {
+  const raw = String(reply || '').replace(/\*\*/g, '')
+  const questions = []
+  const numbered = /(?:^|\n)\s*(?:[-*]\s*)?\d{1,2}[.、）)]\s*([^\n]{3,220}?[？?](?:（[^\n]{0,100}）)?)/g
+  for (const match of raw.matchAll(numbered)) {
+    const question = cleanRecoveredQuestion(match[1])
+    if (question && !questions.includes(question)) questions.push(question)
+    if (questions.length >= 3) break
+  }
+  if (questions.length) return questions
+
+  const sentences = raw.match(/[^。！!\n]{4,180}[？?]/g) || []
+  for (const sentence of sentences) {
+    const question = cleanRecoveredQuestion(sentence)
+    if (question && !questions.includes(question)) questions.push(question)
+    if (questions.length >= 3) break
+  }
+  return questions
+}
+
+function recoverStreamResult(reply, metadataText) {
+  const questions = extractStringArrayField(metadataText, 'questions')
+  const recoveredQuestions = questions.length ? questions : extractQuestionsFromReply(reply)
+  return {
+    status: recoveredQuestions.length ? 'clarify' : 'answer',
+    questions: recoveredQuestions,
+    searchQuery: '',
+    actionDrafts: [],
+    planDrafts: [],
+    reply,
+    metadataRecovered: true,
+  }
+}
+
 function responseText(payload) {
   const content = payload?.choices?.[0]?.message?.content
   if (typeof content === 'string') return content
@@ -363,8 +447,14 @@ function extractStreamResult(text) {
   const markerIndex = raw.indexOf(STREAM_META_MARKER)
   if (markerIndex < 0) return extractJson(raw)
   const reply = raw.slice(0, markerIndex).trim()
-  const metadata = extractJson(raw.slice(markerIndex + STREAM_META_MARKER.length))
-  return { ...metadata, reply }
+  const metadataText = raw.slice(markerIndex + STREAM_META_MARKER.length)
+  try {
+    const metadata = extractJson(metadataText)
+    return { ...metadata, reply }
+  } catch (error) {
+    if (!reply) throw error
+    return recoverStreamResult(reply, metadataText)
+  }
 }
 
 function immediateStreamPrelude(message) {

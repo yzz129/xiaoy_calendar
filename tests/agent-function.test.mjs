@@ -288,6 +288,43 @@ try {
   assert.match(streamBody, /event: reset/)
   assert.ok(streamBody.indexOf('event: delta') < streamBody.indexOf('event: result'))
 
+  let malformedProviderCalls = 0
+  globalThis.fetch = async (url, init) => {
+    malformedProviderCalls += 1
+    assert.equal(url, 'https://openrouter.ai/api/v1/chat/completions')
+    const body = JSON.parse(init.body)
+    assert.equal(body.stream, true)
+    const serialized = `我需要确认三点：\n1. 你的具体学习目标是什么？\n2. 每天可以投入多少时间？\n3. 有明确的截止日期吗？\n<<<XY_META>>>\n{"status":"clarify","questions"["你的具体学习目标是什么？"],"searchQuery":""}`
+    const encoder = new TextEncoder()
+    return new Response(new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ model: 'broken-json-model', choices: [{ delta: { content: serialized } }] })}\n\n`))
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+        controller.close()
+      },
+    }), { headers: { 'Content-Type': 'text/event-stream' } })
+  }
+
+  const recoveredResponse = await onRequestPost({
+    request: new Request('https://calendar.yzzwnw.asia/api/agent', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({
+        message: '帮我安排一个学习计划',
+        stream: true,
+        messages: [],
+        calendar: { today: '2026-08-20' },
+      }),
+    }),
+    env: { DB, OPENROUTER_API_KEY: 'test-key', POLLINATIONS_API_KEY: 'unused-fallback-key' },
+  })
+  const recoveredBody = await recoveredResponse.text()
+  assert.equal(malformedProviderCalls, 1, '正文已流出后不应切换模型并重复输出')
+  assert.match(recoveredBody, /event: result/)
+  assert.match(recoveredBody, /event: done/)
+  assert.doesNotMatch(recoveredBody, /event: error/)
+  assert.match(recoveredBody, /你的具体学习目标是什么/)
+
   globalThis.fetch = async (url, init) => {
     assert.equal(url, 'https://gen.pollinations.ai/v1/chat/completions')
     assert.equal(init.headers.Authorization, 'Bearer test-pollinations-key')
