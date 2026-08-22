@@ -1175,7 +1175,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .xy-agent-header > button { width: 35px; height: 35px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 12px 10px 13px 9px; background: var(--paper); color: var(--text); }
 .xy-agent-header > button:last-child { border-radius: 50%; }
 .xy-agent-header button svg { width: 17px; }
-.xy-agent-scroll { min-height: 0; overflow: auto; padding: 15px 14px 24px; overscroll-behavior: contain; scrollbar-width: thin; }
+.xy-agent-scroll { width: 100%; height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 15px 14px 24px; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
 .xy-agent-welcome { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 18px 8px 30px; text-align: center; }
 .xy-agent-welcome-art { width: 118px; height: 104px; position: relative; display: grid; place-items: center; }
 .xy-agent-welcome-art::before { content: ''; position: absolute; inset: 16px 8px 5px; border-radius: 50%; background: color-mix(in srgb, var(--mint) 18%, transparent); transform: rotate(-6deg); }
@@ -1189,7 +1189,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .xy-agent-quick-list button:hover { border-color: var(--mint-dark); transform: translateY(-1px); }
 .xy-agent-quick-list button > span { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 12px 10px 13px 9px; background: color-mix(in srgb, var(--mint) 18%, var(--paper)); color: var(--mint-dark); }
 .xy-agent-quick-list svg { width: 18px; }
-.xy-agent-messages { display: grid; gap: 10px; padding-bottom: 8px; }
+.xy-agent-messages { min-height: 0; display: grid; gap: 10px; padding-bottom: 8px; }
 .xy-agent-message { display: flex; }
 .xy-agent-message > span { max-width: 88%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px 14px 14px 5px; background: var(--paper-soft); font-size: 11px; font-weight: 700; line-height: 1.7; }
 .xy-agent-message.user { justify-content: flex-end; }
@@ -1345,6 +1345,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .xy-agent-backdrop { display: none; }
 .xy-agent-chat-bubble {
   inset: auto;
+  min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: visible;
@@ -1394,7 +1395,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .xy-agent-chat-bubble .xy-agent-header > button { width: 31px; height: 31px; border-radius: 11px 9px 12px 8px; }
 .xy-agent-chat-bubble .xy-agent-header > button:last-child { width: 33px; height: 33px; }
 .xy-agent-chat-bubble .xy-agent-header button svg { width: 15px; }
-.xy-agent-chat-bubble .xy-agent-scroll { min-height: 0; overflow: auto; padding: 11px 11px 16px; background: var(--paper); overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; }
+.xy-agent-chat-bubble .xy-agent-scroll { width: 100%; height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 11px 11px 16px; background: var(--paper); overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; scrollbar-width: thin; }
 .xy-agent-chat-bubble .xy-agent-welcome { min-height: 0; justify-content: flex-start; padding: 2px 3px 8px; }
 .xy-agent-chat-bubble .xy-agent-welcome-art { width: 72px; height: 65px; }
 .xy-agent-chat-bubble .xy-agent-welcome-art img { width: 65px; height: 65px; }

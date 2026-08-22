@@ -138,7 +138,7 @@ Page({
     selectedKey: '', selectedTitle: '', daySheetTitle: '', selectedSummary: '待设置',
     dayOpen: false, dayTab: 'notes', dayEntry: { status: '', duration: 1 }, dayNotes: [], dayTasks: [], dayNewNote: '', dayComposeOpen: false,
     rangeOpen: false, rangeStart: '', rangeEnd: '', rangeStats: { workDays: 0, duration: 0 },
-    theme: 'light', petOpen: false, petInput: '', petBusy: false, petError: '', petPhase: '待命', petScrollTarget: 'pet-chat-end-0',
+    theme: 'light', petOpen: false, petInput: '', petInputFocus: false, petBusy: false, petError: '', petPhase: '待命', petScrollTarget: 'pet-chat-end-0',
     petMood: 'idle', petAmbientMood: 'idle', petCelebrating: false, petStatus: PET_STATUS.idle,
     petImage: PET_IMAGES.idle, petMessages: [], petResult: { questions: [], planDrafts: [] },
     petApplied: false, quickPrompts: QUICK_PROMPTS, petX: 0, petY: 0, petDragging: false,
@@ -156,6 +156,8 @@ Page({
       petAmbientMood, petMood: petAmbientMood, petImage: PET_IMAGES[petAmbientMood], petStatus: PET_STATUS[petAmbientMood],
     })
     this._petDisposed = false
+    this._petAutoFollow = true
+    this._petScrollTouching = false
     this._petTypewriter = createTypewriterController({
       interval: 18,
       onUpdate: (id, content, streaming) => this.updatePetStreamMessage(id, content, streaming),
@@ -190,6 +192,7 @@ Page({
     this.stopPetMoodTimer()
     clearTimeout(this._petTapTimer)
     clearTimeout(this._hiddenDragTapTimer)
+    clearTimeout(this._petScrollTouchTimer)
   },
 
   async onPullDownRefresh() {
@@ -599,17 +602,61 @@ Page({
     this.setData({ petOpen: !this.data.petOpen, dayOpen: false, petError: '' }, () => {
       this.fitPetToBounds(false)
       this.refreshPetMood()
+      if (this.data.petOpen) {
+        this._petAutoFollow = true
+        this.measurePetScrollViewport()
+        wx.nextTick(() => this.scrollPetToEnd(true))
+      }
     })
   },
   closePet() { this.setData({ petOpen: false }, () => this.refreshPetMood()) },
   inputPet(event) { this.setData({ petInput: event.detail.value.slice(0, 1200), petError: '' }, () => this.refreshPetMood()) },
+  blurPetInput() { this.setData({ petInputFocus: false }) },
+  choosePetQuestion(event) {
+    if (this.data.petBusy) return
+    const question = String(event?.currentTarget?.dataset?.prompt || '').trim()
+    if (!question) return
+    this._petAutoFollow = true
+    this.setData({ petInput: `${question}：`, petInputFocus: true, petError: '' }, () => this.refreshPetMood())
+  },
+  measurePetScrollViewport() {
+    wx.nextTick(() => {
+      this.createSelectorQuery().select('.pet-scroll').boundingClientRect((rect) => {
+        if (rect?.height) this._petScrollViewportHeight = rect.height
+      }).exec()
+    })
+  },
+  startPetScrollTouch() {
+    clearTimeout(this._petScrollTouchTimer)
+    this._petScrollTouching = true
+  },
+  endPetScrollTouch() {
+    clearTimeout(this._petScrollTouchTimer)
+    this._petScrollTouchTimer = setTimeout(() => { this._petScrollTouching = false }, 220)
+  },
+  onPetChatScroll(event) {
+    if (!this._petScrollTouching) return
+    const detail = event?.detail || {}
+    const viewportHeight = this._petScrollViewportHeight || Math.max(80, Number(this.data.bubbleHeight || 0) - 116)
+    const distanceToEnd = Number(detail.scrollHeight || 0) - Number(detail.scrollTop || 0) - viewportHeight
+    if (Number.isFinite(distanceToEnd)) this._petAutoFollow = distanceToEnd < 42
+  },
+  scrollPetToEnd(force = false) {
+    if (!force && this._petAutoFollow === false) return
+    const nextStep = this.data.petScrollTarget === 'pet-chat-end-0' ? 1 : 0
+    this.setData({ petScrollTarget: `pet-chat-end-${nextStep}` })
+  },
   updatePetStreamMessage(id, content, streaming) {
     if (this._petDisposed) return
     const petMessages = this.data.petMessages.map((message) => (
       message.id === id ? decoratePetMessage({ ...message, content, streaming }) : message
     ))
-    const scrollStep = Math.floor(String(content || '').length / 6) % 2
-    this.setData({ petMessages, petScrollTarget: `pet-chat-end-${scrollStep}` })
+    const update = { petMessages }
+    if (this._petAutoFollow !== false) {
+      const scrollStep = Math.floor(String(content || '').length / 6) % 2
+      update.petScrollTarget = `pet-chat-end-${scrollStep}`
+    }
+    this.setData(update)
   },
   async sendPet(event) {
     if (this.data.petBusy) return
@@ -624,8 +671,9 @@ Page({
       decoratePetMessage({ id: streamId, role: 'assistant', content: '', streaming: true }),
     ].slice(-20)
     this._petTypewriter.begin(streamId)
+    this._petAutoFollow = true
     this.setData({
-      petInput: '', petBusy: true, petError: '', petPhase: '正在连接', petCelebrating: false,
+      petInput: '', petInputFocus: false, petBusy: true, petError: '', petPhase: '正在连接', petCelebrating: false,
       petMessages: messages, petResult: { questions: [], planDrafts: [] }, petApplied: false,
     }, () => this.refreshPetMood())
     try {
@@ -640,7 +688,10 @@ Page({
       this._petStreamRequest = request
       const payload = await request
       await this._petTypewriter.complete(streamId, payload.reply || '我已经看过你的日历了。')
-      this.setData({ petResult: payload, petPhase: '整理完成' })
+      this.setData({ petResult: payload, petPhase: '整理完成' }, () => {
+        this.measurePetScrollViewport()
+        wx.nextTick(() => this.scrollPetToEnd(true))
+      })
       if (payload.planDrafts?.length) this.celebratePet()
     } catch (error) {
       this._petTypewriter.cancel(streamId)

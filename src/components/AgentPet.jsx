@@ -367,6 +367,8 @@ export default function AgentPet({ calendarContext, onApplyPlans, onExecuteActio
   const dragRef = useRef(null)
   const bubbleResizeRef = useRef(null)
   const typewriterRef = useRef(null)
+  const autoFollowScrollRef = useRef(true)
+  const scrollFrameRef = useRef(0)
   if (!typewriterRef.current) {
     typewriterRef.current = createTypewriterController({
       onUpdate: (id, content, streaming) => setMessages((current) => current.map((message) => (
@@ -394,10 +396,27 @@ export default function AgentPet({ calendarContext, onApplyPlans, onExecuteActio
 
   useEffect(() => () => typewriterRef.current?.dispose(), [])
 
+  const scrollConversationToEnd = (behavior = 'auto') => {
+    window.cancelAnimationFrame(scrollFrameRef.current)
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      const scroller = scrollRef.current
+      if (!scroller || !autoFollowScrollRef.current) return
+      scroller.scrollTo({ top: scroller.scrollHeight, behavior })
+    })
+  }
+
+  const handleConversationScroll = () => {
+    const scroller = scrollRef.current
+    if (!scroller) return
+    autoFollowScrollRef.current = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 56
+  }
+
   useEffect(() => {
     if (!open) return
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+    scrollConversationToEnd(messages.some((message) => message.streaming) ? 'auto' : 'smooth')
   }, [messages, result, busy, profileOpen, open])
+
+  useEffect(() => () => window.cancelAnimationFrame(scrollFrameRef.current), [])
 
   useEffect(() => {
     if (!open || window.innerWidth <= 760) return undefined
@@ -531,6 +550,7 @@ export default function AgentPet({ calendarContext, onApplyPlans, onExecuteActio
     const nextMessages = [...messages, { role: 'user', content }].slice(-30)
     const streamId = globalThis.crypto?.randomUUID?.() || `stream-${Date.now()}`
     const typingComplete = typewriterRef.current.begin(streamId)
+    autoFollowScrollRef.current = true
     setMessages([...nextMessages, { id: streamId, role: 'assistant', content: '', streaming: true }].slice(-30))
     setInput('')
     setBusy(true)
@@ -560,26 +580,26 @@ export default function AgentPet({ calendarContext, onApplyPlans, onExecuteActio
         reset: () => typewriterRef.current.reset(streamId),
         result: (payload) => {
           finalPayload = payload
-          setResult(payload)
-          const automaticActions = (payload.actionDrafts || []).filter((action) => action.automatic && action.kind === 'jump_to_date')
-          setActionStates(Object.fromEntries(automaticActions.map((action) => [action.id, { status: 'running', message: '正在翻日历…' }])))
-          automaticActions.forEach((action) => {
-            Promise.resolve(onExecuteAction?.(action)).then((message) => {
-              setActionStates((current) => ({ ...current, [action.id]: { status: 'done', message: message || '已跳转' } }))
-              setPhase('已定位日期')
-            }).catch((reason) => {
-              setActionStates((current) => ({ ...current, [action.id]: { status: 'error', message: reason?.message || '跳转失败' } }))
-            })
-          })
           typewriterRef.current.complete(streamId, payload)
-          if (payload.planDrafts?.length) setCelebrating(true)
-          setPhase(payload.sources?.length ? '已联网整理' : payload.status === 'clarify' ? '等你补充' : '方案已就绪')
         },
         error: (event) => { streamError = event.error || '小Y 暂时没有收到模型回复' },
       })
       if (streamError) throw new Error(streamError)
       if (!finalPayload) throw new Error('模型回复中断，请重试')
       await typingComplete
+      setResult(finalPayload)
+      const automaticActions = (finalPayload.actionDrafts || []).filter((action) => action.automatic && action.kind === 'jump_to_date')
+      setActionStates(Object.fromEntries(automaticActions.map((action) => [action.id, { status: 'running', message: '正在翻日历…' }])))
+      automaticActions.forEach((action) => {
+        Promise.resolve(onExecuteAction?.(action)).then((message) => {
+          setActionStates((current) => ({ ...current, [action.id]: { status: 'done', message: message || '已跳转' } }))
+          setPhase('已定位日期')
+        }).catch((reason) => {
+          setActionStates((current) => ({ ...current, [action.id]: { status: 'error', message: reason?.message || '跳转失败' } }))
+        })
+      })
+      if (finalPayload.planDrafts?.length) setCelebrating(true)
+      setPhase(finalPayload.sources?.length ? '已联网整理' : finalPayload.status === 'clarify' ? '等你补充' : '方案已就绪')
     } catch (requestError) {
       typewriterRef.current.cancel(streamId, true)
       setMessages((current) => current.filter((message) => message.id !== streamId || message.content))
@@ -591,6 +611,17 @@ export default function AgentPet({ calendarContext, onApplyPlans, onExecuteActio
     } finally {
       setBusy(false)
     }
+  }
+
+  const chooseFollowup = (question) => {
+    const nextInput = `${String(question || '').trim()}：`
+    if (nextInput === '：') return
+    autoFollowScrollRef.current = true
+    setInput(nextInput)
+    window.requestAnimationFrame(() => {
+      inputRef.current?.focus()
+      inputRef.current?.setSelectionRange?.(nextInput.length, nextInput.length)
+    })
   }
 
   const applyPlans = () => {
@@ -729,7 +760,7 @@ export default function AgentPet({ calendarContext, onApplyPlans, onExecuteActio
           <button type="button" onClick={() => setOpen(false)} aria-label="关闭"><X /></button>
         </header>
 
-        <div className="xy-agent-scroll" ref={scrollRef}>
+        <div className="xy-agent-scroll" ref={scrollRef} onScroll={handleConversationScroll}>
           {profileOpen ? (
             <section className="xy-agent-profile">
               <div className="xy-agent-section-title"><UserRoundCog /><div><strong>我的情况</strong><small>这些信息只保存在本机，帮助小Y少问几次</small></div><ChevronDown /></div>
@@ -762,7 +793,7 @@ export default function AgentPet({ calendarContext, onApplyPlans, onExecuteActio
           {error ? <section className="xy-agent-error"><p>{error}</p><button type="button" onClick={() => send([...messages].reverse().find((message) => message.role === 'user')?.content)}><RotateCcw />重试</button></section> : null}
 
           {result?.questions?.length ? (
-            <section className="xy-agent-followups"><div className="xy-agent-section-title"><MessageCircleQuestion /><div><strong>还差一点信息</strong><small>点一个问题直接补充</small></div></div>{result.questions.map((question) => <button type="button" key={question} onClick={() => { setInput(`${question}：`); inputRef.current?.focus() }}>{question}</button>)}</section>
+            <section className="xy-agent-followups"><div className="xy-agent-section-title"><MessageCircleQuestion /><div><strong>还差一点信息</strong><small>点一个问题填入输入框</small></div></div>{result.questions.map((question) => <button type="button" key={question} onClick={() => chooseFollowup(question)}>{question}</button>)}</section>
           ) : null}
 
           {result?.actionDrafts?.length ? (
