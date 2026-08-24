@@ -134,6 +134,7 @@ function apiPetMessages(messages) {
 
 Page({
   data: {
+    fontsReady: Boolean(app.globalData.brandFontsLoaded),
     user: {}, loggedIn: false, isAdmin: false, year: 0, month: 0, monthTitle: '', weekLabels: WEEK_LABELS, cells: [],
     stats: { completed: 0, leave: 0, duration: 0 }, activePlanCount: 0,
     selectedKey: '', selectedTitle: '', daySheetTitle: '', selectedSummary: '待设置',
@@ -157,6 +158,9 @@ Page({
       petAmbientMood, petMood: petAmbientMood, petImage: PET_IMAGES[petAmbientMood], petStatus: PET_STATUS[petAmbientMood],
     })
     this._petDisposed = false
+    Promise.resolve(app.globalData.brandFontsReady).then((loaded) => {
+      if (loaded && !this._petDisposed) this.setData({ fontsReady: true })
+    })
     this._petAutoFollow = true
     this._petScrollTouching = false
     this._petTypewriter = createTypewriterController({

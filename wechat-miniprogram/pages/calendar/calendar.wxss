@@ -33,3 +33,25 @@
 @keyframes petCaret{0%,48%{opacity:1}49%,100%{opacity:0}}
 @media (min-width:430px){.app-header{grid-template-columns:180rpx minmax(0,1fr);gap:16rpx 18rpx}.header-actions{justify-items:end}.primary-actions,.utility-actions{width:auto;display:flex;justify-content:flex-end}.action.primary{width:88rpx}.action.plan{width:142rpx}.icon-action{width:56rpx}.icon-action.labeled{width:auto;min-width:92rpx;padding:0 13rpx}}
 @media (max-width:360px){.calendar-page{padding-left:10rpx;padding-right:10rpx}.app-header{gap:14rpx}.header-actions{gap:9rpx}.primary-actions,.utility-actions{gap:7rpx}.icon-action.labeled{padding:0 5rpx}.icon-action.labeled text{font-size:15rpx}.day-cell{height:102rpx}.summary-item{padding-left:7rpx;padding-right:7rpx}.summary-label{font-size:16rpx}}
+
+/* 全量字库下载完成前只用轻量预览字库；class 切换会让已渲染长文本统一重绘。 */
+.calendar-page.fonts-loading,
+.calendar-page.fonts-loading .pet-message {
+  font-family: "XY Rounded Preview", "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+.calendar-page.fonts-loading .brand-name,
+.calendar-page.fonts-loading .month-title,
+.calendar-page.fonts-loading .summary-value,
+.calendar-page.fonts-loading .range-result text,
+.calendar-page.fonts-loading .day-sheet-title > text:first-child,
+.calendar-page.fonts-loading .day-duration > view > text,
+.calendar-page.fonts-loading .pet-header-title,
+.calendar-page.fonts-loading .pet-welcome-title {
+  font-family: "XY Doodle Preview", "XY Rounded Preview", sans-serif;
+}
+
+.calendar-page.fonts-ready,
+.calendar-page.fonts-ready .pet-message {
+  font-family: "XY Rounded", "Microsoft YaHei", "PingFang SC", sans-serif;
+}

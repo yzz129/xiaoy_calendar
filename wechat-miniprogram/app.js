@@ -39,7 +39,7 @@ function loadBrandFonts() {
   const origin = 'https://calendar.yzzwnw.asia/fonts'
   const load = (family, filename, quiet = false) => new Promise((resolve) => wx.loadFontFace({
     family,
-    source: `url("${origin}/${filename}?v=2.2.2")`,
+    source: `url("${origin}/${filename}?v=2.2.3")`,
     global: true,
     desc: { style: 'normal', weight: 'normal' },
     success: () => resolve(true),
@@ -49,17 +49,15 @@ function loadBrandFonts() {
     },
   }))
 
-  // 常用字形与全量字形使用不同 family。全量字体后台加载时不会替换
-  // 已渲染的首屏字体，避免冷启动出现二次闪烁和布局重排。
+  // 小字库只用于全量字体下载完成前的首屏占位。页面实际使用的正式
+  // family 必须绑定全量字库，否则长文本会永久混入系统回退字体。
   const fonts = [
-    ['XY Doodle', 'XY Doodle Full', 'xy-doodle-miniprogram.woff', 'xy-doodle-full.woff'],
-    ['XY Rounded', 'XY Rounded Full', 'xy-rounded-miniprogram.woff', 'xy-rounded-full.woff'],
+    ['XY Doodle', 'XY Doodle Preview', 'xy-doodle-full.woff', 'xy-doodle-miniprogram.woff'],
+    ['XY Rounded', 'XY Rounded Preview', 'xy-rounded-full.woff', 'xy-rounded-miniprogram.woff'],
   ]
-  const fastLoads = fonts.map(([family, , fastFile]) => load(family, fastFile))
-  Promise.all(fastLoads).then(() => setTimeout(() => {
-    fonts.forEach(([, fullFamily, , fullFile]) => load(fullFamily, fullFile, true))
-  }, 1800))
-  return Promise.all(fastLoads)
+  fonts.forEach(([, previewFamily, , previewFile]) => load(previewFamily, previewFile, true))
+  return Promise.all(fonts.map(([family, , fullFile]) => load(family, fullFile)))
+    .then((results) => results.every(Boolean))
 }
 
 const PET_ASSETS = [
@@ -83,13 +81,17 @@ App({
     syncReady: false,
     sessionCheckedAt: 0,
     brandFontsReady: null,
+    brandFontsLoaded: false,
     petAssetsReady: null,
   },
 
   onLaunch() {
     this.globalData.user = wx.getStorageSync(STORAGE_KEYS.user) || null
     this.globalData.snapshot = normalizeSnapshot(wx.getStorageSync(STORAGE_KEYS.snapshot))
-    this.globalData.brandFontsReady = loadBrandFonts()
+    this.globalData.brandFontsReady = loadBrandFonts().then((loaded) => {
+      this.globalData.brandFontsLoaded = loaded
+      return loaded
+    })
     this.globalData.petAssetsReady = preloadPetAssets()
   },
 

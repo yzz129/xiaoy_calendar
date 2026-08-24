@@ -15,7 +15,7 @@ page {
   min-height: 100%;
   background: #f8fcfb;
   color: var(--ink);
-  font-family: "XY Rounded", "XY Rounded Full", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: "XY Rounded", "XY Rounded Preview", "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 
 button {
@@ -25,12 +25,12 @@ button {
 
 input,
 textarea {
-  font-family: "XY Rounded", "XY Rounded Full", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: "XY Rounded", "XY Rounded Preview", "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 
 .xy-placeholder {
   color: var(--muted);
-  font-family: "XY Rounded", "XY Rounded Full", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: "XY Rounded", "XY Rounded Preview", "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 
 button::after {

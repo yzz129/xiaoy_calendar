@@ -1,4 +1,4 @@
-<view class="calendar-page theme-{{theme}}">
+<view class="calendar-page theme-{{theme}} {{fontsReady ? 'fonts-ready' : 'fonts-loading'}}">
   <view class="app-header">
     <view class="brand-block">
       <image class="brand-mark" src="/assets/icons/doodle/mascot.svg" mode="aspectFit" />
