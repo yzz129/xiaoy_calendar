@@ -932,11 +932,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 }
 
 @media (min-width: 2200px) and (min-height: 900px) {
-  .app-frame { width: min(1700px, 72vw); min-height: 0; zoom: 1.15; }
+  .app-frame { width: min(1800px, 72vw); min-height: 0; zoom: 1.2; }
 }
 
 @media (min-width: 3200px) and (min-height: 1200px) {
-  .app-frame { width: min(1900px, 64vw); min-height: 0; zoom: 1.35; }
+  .app-frame { width: min(2100px, 60vw); min-height: 0; zoom: 1.45; }
+}
+
+@media (min-width: 3200px) and (min-height: 1500px) {
+  .app-frame { width: min(1950px, 52vw); zoom: 1.75; }
 }
 
 @media (max-width: 720px) {
