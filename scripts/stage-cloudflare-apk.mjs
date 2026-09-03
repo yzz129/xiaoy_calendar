@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const source = resolve(process.env.XIAOY_APK_PATH || resolve(repoRoot, 'release/xiaoy-calendar-1.9-store.apk'))
 const destination = resolve(repoRoot, 'dist/downloads/xiaoy-calendar-latest.apk')
-const versionedDestination = resolve(repoRoot, 'dist/downloads/xiaoy-calendar-1.9-109004.apk')
+const versionedDestination = resolve(repoRoot, 'dist/downloads/xiaoy-calendar-1.9-109005.apk')
 const pagesAssetLimit = 25 * 1024 * 1024
 
 const sourceInfo = await stat(source)

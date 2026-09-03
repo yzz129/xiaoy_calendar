@@ -1,4 +1,4 @@
-export const APK_DOWNLOAD_URL = 'https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-1.9-109004.apk'
+export const APK_DOWNLOAD_URL = 'https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-1.9-109005.apk'
 export const APK_DOWNLOAD_PAGE_URL = '/download/'
 
 export const isNativeApp = () => window.Capacitor?.isNativePlatform?.() === true

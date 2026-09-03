@@ -36,6 +36,9 @@ test('theme page exposes font, transparency, skin, and smart crop actions', () =
   assert.match(script, /background-size: contain/)
   assert.match(script, /timeout: 7000/)
   assert.match(read('app.js'), /background-size: cover, contain/)
+  assert.match(markup, /class="skin-preview-image"[^>]*mode="widthFix"/)
+  assert.doesNotMatch(markup, /class="upload-help"/)
+  assert.match(read('pages/theme/theme.wxss'), /\.skin-preview\.has-image\{min-height:0;align-self:start/)
 })
 
 test('mini program adaptive palette is complete and exported as page variables', () => {
@@ -103,7 +106,7 @@ test('cloud font files are loaded before full fonts and theme settings survive s
   const app = read('app.js')
   const sync = readFileSync(resolve('functions/api/sync.js'), 'utf8')
   assert.match(app, /xy-rounded-miniprogram\.woff/)
-  assert.match(app, /v=2\.3\.9/)
+  assert.match(app, /v=2\.4\.0/)
   assert.match(app, /function loadBrandFontPreviews/)
   assert.match(app, /ensureBrandFontPreviews\(force = false\)/)
   assert.match(read('app.wxss'), /font-family:\s*"XY Doodle", "XY Doodle Preview"/)

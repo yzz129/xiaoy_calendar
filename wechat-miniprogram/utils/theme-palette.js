@@ -80,7 +80,7 @@ function paletteStyleText(value) {
 }
 function paletteOverlay(value) {
   const palette = normalizeAdaptivePalette(value); if (!palette) return ''
-  return `${rgba(palette.paper, palette.mode === 'dark' ? .76 : .7)}, ${rgba(palette.paperSoft, palette.mode === 'dark' ? .86 : .82)}`
+  return `${rgba(palette.paper, palette.mode === 'dark' ? .22 : .16)}, ${rgba(palette.paperSoft, palette.mode === 'dark' ? .34 : .24)}`
 }
 
 module.exports = { buildAdaptivePalette, extractPaletteSeed, normalizeAdaptivePalette, paletteStyleText, paletteOverlay }

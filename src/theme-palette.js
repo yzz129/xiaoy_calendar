@@ -236,7 +236,7 @@ export function paletteStyleVariables(value) {
     '--blue-soft': palette.blueSoft,
     '--paper-rgb': `${paperRgb.r} ${paperRgb.g} ${paperRgb.b}`,
     '--paper-soft-rgb': `${paperSoftRgb.r} ${paperSoftRgb.g} ${paperSoftRgb.b}`,
-    '--skin-overlay-top': rgba(palette.paper, palette.mode === 'dark' ? .76 : .7),
-    '--skin-overlay-bottom': rgba(palette.paperSoft, palette.mode === 'dark' ? .86 : .82),
+    '--skin-overlay-top': rgba(palette.paper, palette.mode === 'dark' ? .22 : .16),
+    '--skin-overlay-bottom': rgba(palette.paperSoft, palette.mode === 'dark' ? .34 : .24),
   }
 }

@@ -89,14 +89,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
   position: fixed;
   z-index: 0;
   inset: 0;
-  background-image: linear-gradient(var(--skin-overlay-top, rgba(255, 255, 255, .72)), var(--skin-overlay-bottom, rgba(247, 253, 251, .82))), var(--skin-image);
+  background-image: linear-gradient(var(--skin-overlay-top, rgba(255, 255, 255, .16)), var(--skin-overlay-bottom, rgba(247, 253, 251, .24))), var(--skin-image);
   background-position: center, var(--skin-position, 50% 45%);
   background-repeat: no-repeat;
   background-size: cover, contain;
   transform: translateZ(0);
 }
 .app.has-custom-skin[data-theme='berry-night']::before {
-  background-image: linear-gradient(var(--skin-overlay-top, rgba(8, 25, 42, .76)), var(--skin-overlay-bottom, rgba(14, 34, 57, .88))), var(--skin-image);
+  background-image: linear-gradient(var(--skin-overlay-top, rgba(8, 25, 42, .22)), var(--skin-overlay-bottom, rgba(14, 34, 57, .34))), var(--skin-image);
 }
 .app.has-custom-skin > .app-frame { position: relative; z-index: 1; }
 .app > * { opacity: var(--content-opacity); transition: opacity .18s ease; }
@@ -2152,7 +2152,9 @@ option {
 .skin-night .skin-swatch b { background: #ff806d; }
 .custom-skin-panel { display: grid; grid-template-columns: 155px minmax(0, 1fr); grid-template-rows: auto auto auto; gap: 9px 12px; padding: 10px; border: 1px dashed var(--line); border-radius: 15px 12px 16px 11px; background: var(--paper); }
 .custom-skin-panel.active { border-style: solid; border-color: var(--mint-dark); }
-.custom-skin-preview { min-height: 116px; grid-row: 1 / 5; display: grid; position: relative; place-items: center; align-content: center; gap: 6px; overflow: hidden; color: var(--muted); border-radius: 11px 8px 12px 7px; background-color: var(--blue-soft); background-repeat: no-repeat; background-size: contain; text-align: center; }
+.custom-skin-preview { min-height: 116px; grid-row: 1 / 5; display: grid; position: relative; place-items: center; align-self: start; align-content: center; gap: 6px; overflow: hidden; color: var(--muted); border-radius: 11px 8px 12px 7px; background-color: var(--blue-soft); text-align: center; }
+.custom-skin-preview.has-image { min-height: 0; background: rgba(255, 255, 255, .18); }
+.custom-skin-preview > img { display: block; width: 100%; height: auto; }
 .custom-skin-preview::after { content: ''; position: absolute; inset: 0; border: 1px solid rgba(255,255,255,.45); border-radius: inherit; pointer-events: none; }
 .custom-skin-preview > svg { width: 26px; }
 .custom-skin-preview > span:not(.smart-crop-badge) { padding: 0 10px; font-size: 10px; }
@@ -2170,7 +2172,6 @@ option {
 .custom-skin-actions > button:disabled { opacity: .55; cursor: wait; }
 .custom-skin-actions > button svg { width: 15px; }
 .custom-skin-actions .remove-skin { width: 39px; padding: 0; color: var(--coral); background: var(--coral-soft); box-shadow: none; }
-.skin-help { align-self: start; color: var(--muted); font-size: 9px; line-height: 1.55; }
 .theme-message { display: flex; align-items: center; gap: 6px; margin: 0; padding: 9px 11px; color: var(--mint-dark); border-radius: 9px; background: var(--mint-soft); font-size: 10px; }
 .theme-message svg { width: 14px; }
 .theme-message.busy svg { animation: agent-spin .8s linear infinite; }

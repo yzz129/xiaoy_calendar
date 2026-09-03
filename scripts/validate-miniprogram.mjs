@@ -43,7 +43,7 @@ if (/小Y壁纸|丰富的壁纸资源|tea\.qingnian8\.com|upload\.qiniu\.com|cdn
   throw new Error('仍存在旧小程序名称、介绍或域名')
 }
 if (!allText.includes('https://calendar.yzzwnw.asia')) throw new Error('未配置小Y日历 API 域名')
-if (!allText.includes('微信小程序 2.3.9')) throw new Error('小程序页面版本号未更新为 2.3.9')
+if (!allText.includes('微信小程序 2.4.0')) throw new Error('小程序页面版本号未更新为 2.4.0')
 for (const marker of ['fontTheme', 'surfaceOpacity', '内容透明度', '/api/theme/analyze', '/api/theme/skin', '上传并智能适配', '当前使用']) {
   if (!allText.includes(marker)) throw new Error(`主题功能缺少关键标记：${marker}`)
 }

@@ -59,7 +59,7 @@ function loadFontFile(family, filename, quiet = false) {
   const origin = 'https://calendar.yzzwnw.asia/fonts'
   return new Promise((resolve) => wx.loadFontFace({
     family,
-    source: `url("${origin}/${filename}?v=2.3.9")`,
+    source: `url("${origin}/${filename}?v=2.4.0")`,
     global: true,
     desc: { style: 'normal', weight: 'normal' },
     success: () => resolve(true),
@@ -177,7 +177,7 @@ App({
     const effectiveTheme = draft?.theme || snapshot.theme
     const skinPath = draft?.path || (snapshot.skin.enabled ? await this.ensureThemeSkin() : '')
     const night = effectiveTheme === 'berry-night'
-    const overlay = paletteOverlay(effectiveSkin.palette) || (night ? 'rgba(8,25,42,.76), rgba(14,34,57,.88)' : 'rgba(255,255,255,.72), rgba(247,253,251,.84)')
+    const overlay = paletteOverlay(effectiveSkin.palette) || (night ? 'rgba(8,25,42,.22), rgba(14,34,57,.34)' : 'rgba(255,255,255,.16), rgba(247,253,251,.24)')
     const contentAlpha = snapshot.surfaceOpacity / 100
     if (snapshot.fontTheme !== 'system') {
       this.ensureBrandFontPreviews().then((loaded) => {

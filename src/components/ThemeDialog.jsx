@@ -179,8 +179,9 @@ export default function ThemeDialog({ settings, skinUrl, onChange, onPreviewSkin
           </div>
 
           <div className={`custom-skin-panel ${settings.skin.enabled ? 'active' : ''}`}>
-            <div className="custom-skin-preview" style={previewUrl ? { backgroundImage: `url("${previewUrl}")`, backgroundPosition: `${settings.skin.focusX * 100}% ${settings.skin.focusY * 100}%` } : undefined}>
-              {!previewUrl ? <><ImagePlus /><span>图片预览</span></> : <span className="smart-crop-badge"><Sparkles />完整画面＋智能配色</span>}
+            <div className={`custom-skin-preview ${previewUrl ? 'has-image' : ''}`}>
+              {previewUrl ? <img src={previewUrl} alt="当前壁纸完整预览" /> : <><ImagePlus /><span>图片预览</span></>}
+              {previewUrl ? <span className="smart-crop-badge"><Sparkles />完整画面＋智能配色</span> : null}
             </div>
             <div className="custom-skin-copy"><strong>自定义图片皮肤</strong><span>选图立即预览，完整保留画面并智能匹配按钮、卡片和文字</span></div>
             {settings.skin.enabled && settings.skin.palette ? (
@@ -194,7 +195,6 @@ export default function ThemeDialog({ settings, skinUrl, onChange, onPreviewSkin
               {settings.skin.enabled ? <button type="button" className="remove-skin" onClick={removeSkin} disabled={busy} aria-label="删除自定义皮肤"><Trash2 /></button> : null}
               <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadSkin} hidden />
             </div>
-            <small className="skin-help">上传图片 → AI 选取主体 → 本机按像素面积精准取色 → 生成清晰可读的 UI 主题 → 同步到三端。支持 JPG、PNG、WebP，最大 15MB。</small>
           </div>
           {message ? <p className={`theme-message ${busy ? 'busy' : ''}`} aria-live="polite">{busy ? <LoaderCircle /> : <Check />}{message}</p> : null}
         </div>

@@ -27,12 +27,11 @@
 
     <view class="upload-panel {{skin.enabled ? 'active' : ''}}">
       <text wx:if="{{skin.enabled}}" class="custom-current">✓ 当前使用</text>
-      <view class="skin-preview" style="{{previewStyle}}"><view wx:if="{{!previewPath}}"><text class="preview-icon">▧</text><text>图片预览</text></view><text wx:if="{{previewPath}}" class="crop-badge">✦ 完整画面＋智能配色</text></view>
+      <view class="skin-preview {{previewPath ? 'has-image' : ''}}"><view wx:if="{{!previewPath}}"><text class="preview-icon">▧</text><text>图片预览</text></view><image wx:if="{{previewPath}}" class="skin-preview-image" src="{{previewPath}}" mode="widthFix"/><text wx:if="{{previewPath}}" class="crop-badge">✦ 完整画面＋智能配色</text></view>
       <view class="upload-copy"><text>自定义图片皮肤</text><text>选图立即预览，完整保留画面并智能匹配按钮、卡片和文字</text></view>
       <view wx:if="{{paletteSwatches.length}}" class="adaptive-palette"><view wx:for="{{paletteSwatches}}" wx:key="*this" style="background:{{item}}"></view><text>✦ 自适应 UI 配色已启用</text></view>
       <button class="upload-button" loading="{{busy}}" disabled="{{busy}}" bindtap="uploadSkin">{{skin.enabled ? '更换并智能适配' : '上传并智能适配'}}</button>
       <button wx:if="{{skin.enabled}}" class="remove-button" disabled="{{busy}}" bindtap="removeSkin">删除自定义皮肤</button>
-      <text class="upload-help">上传图片 → AI 选取主体 → 本机按像素面积精准取色 → 生成清晰可读的 UI 主题 → 同步到三端。支持 JPG、PNG、WebP，最大 15MB。</text>
     </view>
     <view wx:if="{{status}}" class="theme-status">{{busy ? '◌ ' : '✓ '}}{{status}}</view>
   </view>

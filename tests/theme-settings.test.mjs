@@ -56,7 +56,9 @@ test('custom skin keeps fixed overlays out of the document flow on mobile', () =
   assert.match(css, /\.app\.has-custom-skin\s*>\s*\.app-frame\s*\{\s*position:\s*relative;\s*z-index:\s*1;/)
   assert.match(css, /\.calendar-shell\s*\{[^}]*flex:\s*1;[^}]*grid-template-rows:\s*34px\s+minmax\(306px,\s*1fr\)/s)
   assert.match(css, /\.app\.has-custom-skin::before\s*\{[^}]*background-size:\s*cover, contain;/s)
-  assert.match(css, /\.custom-skin-preview\s*\{[^}]*background-size:\s*contain;/s)
+  assert.match(css, /\.custom-skin-preview\.has-image\s*\{[^}]*min-height:\s*0;/s)
+  assert.match(css, /\.custom-skin-preview\s*>\s*img\s*\{[^}]*width:\s*100%;[^}]*height:\s*auto;/s)
+  assert.match(css, /rgba\(255, 255, 255, \.16\)/)
 })
 
 test('foreground opacity stays readable, sync-safe, and leaves the background layer untouched', () => {
@@ -73,4 +75,10 @@ test('system font option uses the current-theme wording', () => {
   const dialog = readFileSync(new URL('../src/components/ThemeDialog.jsx', import.meta.url), 'utf8')
   assert.match(dialog, /跟随当前主题字体/)
   assert.doesNotMatch(dialog, /尽量使用设备当前设置的字体/)
+})
+
+test('theme preview follows the image ratio and omits the verbose upload hint', () => {
+  const dialog = readFileSync(new URL('../src/components/ThemeDialog.jsx', import.meta.url), 'utf8')
+  assert.match(dialog, /<img src=\{previewUrl\} alt="当前壁纸完整预览"/)
+  assert.doesNotMatch(dialog, /className="skin-help"/)
 })
