@@ -142,8 +142,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 .app-frame {
   width: min(1680px, 100%);
   min-height: calc(100vh - 34px);
-  display: flex;
-  flex-direction: column;
   margin: 0 auto;
 }
 
@@ -440,8 +438,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 
 .workspace {
   display: grid;
-  min-height: 0;
-  flex: 1;
   grid-template-columns: minmax(0, 2.15fr) minmax(330px, .9fr);
   gap: 28px;
   margin-top: 24px;
@@ -454,8 +450,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 }
 
 .calendar-shell {
-  display: grid;
-  grid-template-rows: 54px minmax(540px, 1fr);
   box-shadow: 8px 8px 0 rgba(220, 231, 238, .7);
   overflow: hidden;
 }
@@ -947,11 +941,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 }
 
 @media (min-width: 2200px) and (min-height: 900px) {
-  .app-frame { width: min(1800px, 76vw); min-height: calc(92.592dvh - 30px); zoom: 1.08; }
+  .app-frame { width: min(1700px, 72vw); min-height: 0; zoom: 1.15; }
 }
 
 @media (min-width: 3200px) and (min-height: 1200px) {
-  .app-frame { width: min(2200px, 72vw); min-height: calc(86.956dvh - 28px); zoom: 1.15; }
+  .app-frame { width: min(1900px, 64vw); min-height: 0; zoom: 1.35; }
 }
 
 @media (max-width: 720px) {
