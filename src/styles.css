@@ -943,6 +943,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
   .app-frame { width: min(1950px, 52vw); zoom: 1.75; }
 }
 
+@media (min-width: 3200px) and (min-height: 1700px) {
+  .app-frame { width: min(1950px, 45vw); zoom: 2; }
+}
+
 @media (max-width: 720px) {
   .app { padding: 0 10px calc(82px + env(safe-area-inset-bottom)); background-image: none; }
   .app-frame { min-height: 100vh; }
