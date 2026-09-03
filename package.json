@@ -10,7 +10,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "android:sync": "npm run build && node scripts/prepare-android-assets.mjs && cap sync android",
     "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug",
-    "android:release": "npm run android:sync && cd android && gradlew.bat assembleRelease bundleRelease"
+    "android:release": "npm run android:sync && cd android && gradlew.bat assembleRelease bundleRelease",
+    "validate:miniprogram": "node scripts/validate-miniprogram.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
