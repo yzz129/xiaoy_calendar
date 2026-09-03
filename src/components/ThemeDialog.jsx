@@ -8,8 +8,9 @@ const SKINS = [
   { id: 'berry-night', name: '莓果夜色', note: '柔和护眼', className: 'skin-night' },
 ]
 
-export default function ThemeDialog({ settings, skinUrl, onChange, onClose }) {
+export default function ThemeDialog({ settings, skinUrl, onChange, onPreviewSkin, onClose }) {
   const fileInputRef = useRef(null)
+  const uploadSerialRef = useRef(0)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [previewUrl, setPreviewUrl] = useState(skinUrl || '')
@@ -28,58 +29,82 @@ export default function ThemeDialog({ settings, skinUrl, onChange, onClose }) {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
+    const uploadSerial = ++uploadSerialRef.current
+    const sourcePreviewUrl = URL.createObjectURL(file)
+    setPreviewUrl((current) => {
+      if (current?.startsWith('blob:')) URL.revokeObjectURL(current)
+      return sourcePreviewUrl
+    })
+    onPreviewSkin?.({ source: file, focus: { x: .5, y: .5 }, palette: null })
     setBusy(true)
-    setMessage('正在寻找画面里最好看的部分…')
+    setMessage('图片已显示，正在本机快速适配…')
     try {
       const prepared = await prepareThemeImage(file)
       let focus = prepared.localFocus
       let adaptivePalette = prepared.localPalette
       let aiAssisted = false
-      try {
-        const analysisResponse = await authFetch('/api/theme/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: prepared.analysisDataUrl, width: prepared.width, height: prepared.height }),
-        })
-        const analysisPayload = await analysisResponse.json().catch(() => ({}))
-        if (analysisResponse.ok) {
-          focus = normalizeFocus(analysisPayload.focus, focus)
-          aiAssisted = true
-        }
-      } catch {
-        // 免费视觉模型忙碌时，继续使用设备端显著性与人脸检测结果。
-      }
-
-      setMessage('正在安全归档壁纸原图…')
-      const originalResponse = await authFetch(`/api/theme/original?filename=${encodeURIComponent(file.name || 'wallpaper')}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      })
-      const originalPayload = await originalResponse.json().catch(() => ({}))
-      if (!originalResponse.ok) throw new Error(originalPayload.error || '壁纸原图归档失败')
-
-      setMessage('正在压缩并同步皮肤…')
-      const revision = `${Date.now()}`
-      const uploadResponse = await authFetch(`/api/theme/skin?width=${prepared.width}&height=${prepared.height}&revision=${revision}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'image/webp' },
-        body: prepared.blob,
-      })
-      const uploadPayload = await uploadResponse.json().catch(() => ({}))
-      if (!uploadResponse.ok) throw new Error(uploadPayload.error || '皮肤上传失败')
-      const localUrl = URL.createObjectURL(prepared.blob)
+      const processedPreviewUrl = URL.createObjectURL(prepared.blob)
       setPreviewUrl((current) => {
         if (current?.startsWith('blob:')) URL.revokeObjectURL(current)
-        return localUrl
+        return processedPreviewUrl
       })
+      onPreviewSkin?.({ source: prepared.blob, focus, palette: adaptivePalette })
+      setMessage('本机预览与配色已生效，正在同步高清皮肤…')
+
+      const analysisPromise = (async () => {
+        const controller = new AbortController()
+        const timer = window.setTimeout(() => controller.abort(), 7000)
+        try {
+          const analysisResponse = await authFetch('/api/theme/analyze', {
+            method: 'POST',
+            signal: controller.signal,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: prepared.analysisDataUrl, width: prepared.width, height: prepared.height }),
+          })
+          const analysisPayload = await analysisResponse.json().catch(() => ({}))
+          if (analysisResponse.ok) {
+            focus = normalizeFocus(analysisPayload.focus, focus)
+            aiAssisted = true
+          }
+        } catch {
+          // 免费视觉模型忙碌时，继续使用设备端显著性与人脸检测结果。
+        } finally {
+          window.clearTimeout(timer)
+        }
+      })()
+
+      const revision = `${Date.now()}`
+      const [uploadResponse] = await Promise.all([
+        authFetch(`/api/theme/skin?width=${prepared.width}&height=${prepared.height}&revision=${revision}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'image/webp' },
+          body: prepared.blob,
+        }),
+        analysisPromise,
+      ])
+      const uploadPayload = await uploadResponse.json().catch(() => ({}))
+      if (!uploadResponse.ok) throw new Error(uploadPayload.error || '皮肤上传失败')
       onChange({
         theme: adaptivePalette.mode === 'dark' ? 'berry-night' : 'light',
         fontTheme: settings.fontTheme,
         skin: { enabled: true, revision: uploadPayload.revision || revision, focusX: focus.x, focusY: focus.y, palette: adaptivePalette },
       })
-      setMessage(aiAssisted ? 'AI 取景与本机精准配色完成，已同步到账号' : '本机取景与精准配色完成，已同步到账号')
+      setBusy(false)
+      setMessage(`${aiAssisted ? 'AI 取景' : '本机取景'}与配色已生效；壁纸原图正在后台归档…`)
+
+      authFetch(`/api/theme/original?filename=${encodeURIComponent(file.name || 'wallpaper')}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      }).then(async (response) => {
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(payload.error || '壁纸原图归档失败')
+        if (uploadSerialRef.current === uploadSerial) setMessage('主题与壁纸原图已同步到三端')
+      }).catch(() => {
+        if (uploadSerialRef.current === uploadSerial) setMessage('主题已生效；原图归档失败，请在网络稳定后重新上传')
+      })
     } catch (error) {
+      onPreviewSkin?.(null)
       setMessage(error?.message || '图片处理失败，请换一张试试')
     } finally {
       setBusy(false)
@@ -93,6 +118,7 @@ export default function ThemeDialog({ settings, skinUrl, onChange, onClose }) {
       const response = await authFetch('/api/theme/skin', { method: 'DELETE' })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(payload.error || '移除失败')
+      onPreviewSkin?.(null)
       setPreviewUrl('')
       onChange({ ...settings, skin: { enabled: false, revision: '', focusX: .5, focusY: .45, palette: null } })
       setMessage('已恢复内置皮肤')
@@ -146,7 +172,7 @@ export default function ThemeDialog({ settings, skinUrl, onChange, onClose }) {
           <div className="theme-section-heading"><span><strong>选择皮肤</strong><small>选择内置配色，或上传自己的图片</small></span><Sparkles /></div>
           <div className="skin-options" role="radiogroup" aria-label="内置皮肤">
             {SKINS.map((skin) => (
-              <button type="button" key={skin.id} className={`${skin.className} ${!settings.skin.enabled && settings.theme === skin.id ? 'selected' : ''}`} onClick={() => onChange({ ...settings, theme: skin.id, skin: { ...settings.skin, enabled: false } })} role="radio" aria-checked={!settings.skin.enabled && settings.theme === skin.id}>
+              <button type="button" key={skin.id} className={`${skin.className} ${!settings.skin.enabled && settings.theme === skin.id ? 'selected' : ''}`} onClick={() => { onPreviewSkin?.(null); onChange({ ...settings, theme: skin.id, skin: { ...settings.skin, enabled: false } }) }} role="radio" aria-checked={!settings.skin.enabled && settings.theme === skin.id}>
                 <span className="skin-swatch"><i /><b /></span><span><strong>{skin.name}</strong><small>{skin.note}</small></span>{!settings.skin.enabled && settings.theme === skin.id ? <span className="theme-current"><Check />当前使用</span> : null}
               </button>
             ))}
@@ -154,9 +180,9 @@ export default function ThemeDialog({ settings, skinUrl, onChange, onClose }) {
 
           <div className={`custom-skin-panel ${settings.skin.enabled ? 'active' : ''}`}>
             <div className="custom-skin-preview" style={previewUrl ? { backgroundImage: `url("${previewUrl}")`, backgroundPosition: `${settings.skin.focusX * 100}% ${settings.skin.focusY * 100}%` } : undefined}>
-              {!previewUrl ? <><ImagePlus /><span>图片预览</span></> : <span className="smart-crop-badge"><Sparkles />AI 取景＋像素取色</span>}
+              {!previewUrl ? <><ImagePlus /><span>图片预览</span></> : <span className="smart-crop-badge"><Sparkles />完整画面＋智能配色</span>}
             </div>
-            <div className="custom-skin-copy"><strong>自定义图片皮肤</strong><span>AI 自动取景，按图片颜色面积匹配按钮、卡片和文字</span></div>
+            <div className="custom-skin-copy"><strong>自定义图片皮肤</strong><span>选图立即预览，完整保留画面并智能匹配按钮、卡片和文字</span></div>
             {settings.skin.enabled && settings.skin.palette ? (
               <div className="adaptive-palette" aria-label="壁纸自适应配色">
                 <span style={{ background: settings.skin.palette.primary }} /><span style={{ background: settings.skin.palette.secondary }} /><span style={{ background: settings.skin.palette.blue }} />

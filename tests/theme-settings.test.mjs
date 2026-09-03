@@ -55,6 +55,8 @@ test('custom skin keeps fixed overlays out of the document flow on mobile', () =
   assert.doesNotMatch(css, /\.app\.has-custom-skin\s*>\s*\*\s*\{[^}]*position:\s*relative/s)
   assert.match(css, /\.app\.has-custom-skin\s*>\s*\.app-frame\s*\{\s*position:\s*relative;\s*z-index:\s*1;/)
   assert.match(css, /\.calendar-shell\s*\{[^}]*flex:\s*1;[^}]*grid-template-rows:\s*34px\s+minmax\(306px,\s*1fr\)/s)
+  assert.match(css, /\.app\.has-custom-skin::before\s*\{[^}]*background-size:\s*cover, contain;/s)
+  assert.match(css, /\.custom-skin-preview\s*\{[^}]*background-size:\s*contain;/s)
 })
 
 test('foreground opacity stays readable, sync-safe, and leaves the background layer untouched', () => {

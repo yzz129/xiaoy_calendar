@@ -14,9 +14,11 @@ test('wallpaper originals are split below the D1 blob limit and protected by adm
   assert.match(migration, /user_theme_original_chunks/)
 })
 
-test('web upload archives the original before publishing the processed skin', () => {
+test('web upload publishes the processed skin before archiving the original in background', () => {
   const dialog = read('../src/components/ThemeDialog.jsx')
-  assert.ok(dialog.indexOf('/api/theme/original') < dialog.indexOf('/api/theme/skin?width='))
+  assert.ok(dialog.indexOf('/api/theme/skin?width=') < dialog.indexOf('/api/theme/original'))
+  assert.match(dialog, /图片已显示，正在本机快速适配/)
+  assert.match(dialog, /onPreviewSkin\?\.\(\{ source: file/)
   assert.match(read('../src/components/AdminApp.jsx'), /用户壁纸原图/)
 })
 

@@ -36,6 +36,7 @@ export default function App({ user, onUserUpdated, onLogout }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [themeOpen, setThemeOpen] = useState(false)
   const [skinUrl, setSkinUrl] = useState('')
+  const [skinDraft, setSkinDraft] = useState(null)
   const [profileSection, setProfileSection] = useState('nickname')
   const [rangeStart, setRangeStart] = useState(() => getMonthRange(today).start)
   const [rangeEnd, setRangeEnd] = useState(() => getMonthRange(today).end)
@@ -86,6 +87,10 @@ export default function App({ user, onUserUpdated, onLogout }) {
         if (!active) return
         objectUrl = URL.createObjectURL(blob)
         setSkinUrl(objectUrl)
+        setSkinDraft((current) => {
+          if (current?.url) URL.revokeObjectURL(current.url)
+          return null
+        })
       })
       .catch(() => { if (active) setSkinUrl('') })
     return () => {
@@ -93,6 +98,18 @@ export default function App({ user, onUserUpdated, onLogout }) {
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
   }, [store.skin?.enabled, store.skin?.revision])
+
+  useEffect(() => () => {
+    if (skinDraft?.url) URL.revokeObjectURL(skinDraft.url)
+  }, [skinDraft])
+
+  const previewSkin = useCallback((draft) => {
+    setSkinDraft((current) => {
+      if (current?.url) URL.revokeObjectURL(current.url)
+      if (!draft?.source) return null
+      return { ...draft, url: URL.createObjectURL(draft.source) }
+    })
+  }, [])
 
   const cells = useMemo(() => getMonthCells(viewDate), [viewDate])
   const stats = useMemo(() => {
@@ -351,16 +368,16 @@ export default function App({ user, onUserUpdated, onLogout }) {
 
   return (
     <div
-      className={`app ${skinUrl && store.skin?.enabled ? 'has-custom-skin' : ''}`}
-      data-theme={store.theme}
+      className={`app ${(skinDraft?.url || (skinUrl && store.skin?.enabled)) ? 'has-custom-skin' : ''}`}
+      data-theme={skinDraft?.palette ? (skinDraft.palette.mode === 'dark' ? 'berry-night' : 'light') : store.theme}
       data-font-theme={store.fontTheme}
-      data-adaptive-palette={skinUrl && store.skin?.enabled && store.skin?.palette ? 'true' : 'false'}
+      data-adaptive-palette={(skinDraft?.palette || (skinUrl && store.skin?.enabled && store.skin?.palette)) ? 'true' : 'false'}
       style={{
         '--content-opacity': store.surfaceOpacity / 100,
-        ...(skinUrl && store.skin?.enabled ? {
-          '--skin-image': `url("${skinUrl}")`,
-          '--skin-position': `${store.skin.focusX * 100}% ${store.skin.focusY * 100}%`,
-          ...paletteStyleVariables(store.skin.palette),
+        ...(skinDraft?.url || (skinUrl && store.skin?.enabled) ? {
+          '--skin-image': `url("${skinDraft?.url || skinUrl}")`,
+          '--skin-position': `${(skinDraft?.focus?.x ?? store.skin.focusX) * 100}% ${(skinDraft?.focus?.y ?? store.skin.focusY) * 100}%`,
+          ...paletteStyleVariables(skinDraft?.palette || store.skin.palette),
         } : {}),
       }}
     >
@@ -464,6 +481,7 @@ export default function App({ user, onUserUpdated, onLogout }) {
             settings={{ theme: store.theme, fontTheme: store.fontTheme, surfaceOpacity: store.surfaceOpacity, skin: store.skin }}
             skinUrl={skinUrl}
             onChange={updateThemeSettings}
+            onPreviewSkin={previewSkin}
             onClose={() => setThemeOpen(false)}
           />
         </Suspense>
