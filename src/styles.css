@@ -89,17 +89,29 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
   content: '';
   position: fixed;
   z-index: 0;
+  inset: -28px;
+  background-image: var(--skin-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: blur(20px) saturate(.92);
+  transform: scale(1.035) translateZ(0);
+}
+.app.has-custom-skin::after {
+  content: '';
+  position: fixed;
+  z-index: 1;
   inset: 0;
+  pointer-events: none;
   background-image: linear-gradient(var(--skin-overlay-top, rgba(255, 255, 255, .16)), var(--skin-overlay-bottom, rgba(247, 253, 251, .24))), var(--skin-image);
   background-position: center, var(--skin-position, 50% 45%);
   background-repeat: no-repeat;
   background-size: cover, contain;
-  transform: translateZ(0);
 }
-.app.has-custom-skin[data-theme='berry-night']::before {
+.app.has-custom-skin[data-theme='berry-night']::after {
   background-image: linear-gradient(var(--skin-overlay-top, rgba(8, 25, 42, .22)), var(--skin-overlay-bottom, rgba(14, 34, 57, .34))), var(--skin-image);
 }
-.app.has-custom-skin > .app-frame { position: relative; z-index: 1; }
+.app.has-custom-skin > .app-frame { position: relative; z-index: 2; }
 .app > * { opacity: var(--content-opacity); transition: opacity .18s ease; }
 
 .app[data-theme='berry-night'] {
@@ -128,8 +140,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 }
 
 .app-frame {
-  width: min(1390px, 100%);
+  width: min(1680px, 100%);
   min-height: calc(100vh - 34px);
+  display: flex;
+  flex-direction: column;
   margin: 0 auto;
 }
 
@@ -426,6 +440,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 
 .workspace {
   display: grid;
+  min-height: 0;
+  flex: 1;
   grid-template-columns: minmax(0, 2.15fr) minmax(330px, .9fr);
   gap: 28px;
   margin-top: 24px;
@@ -438,6 +454,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 }
 
 .calendar-shell {
+  display: grid;
+  grid-template-rows: 54px minmax(540px, 1fr);
   box-shadow: 8px 8px 0 rgba(220, 231, 238, .7);
   overflow: hidden;
 }
@@ -926,6 +944,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
   .workspace { grid-template-columns: 1fr; gap: 22px; }
   .day-planner { min-height: 0; position: relative; top: auto; }
   .calendar-grid { min-height: 510px; }
+}
+
+@media (min-width: 2200px) and (min-height: 900px) {
+  .app-frame { width: min(2000px, 88vw); min-height: calc(90.909dvh - 30px); zoom: 1.1; }
+}
+
+@media (min-width: 3200px) and (min-height: 1200px) {
+  .app-frame { width: min(2600px, 82vw); min-height: calc(83.333dvh - 28px); zoom: 1.2; }
 }
 
 @media (max-width: 720px) {
