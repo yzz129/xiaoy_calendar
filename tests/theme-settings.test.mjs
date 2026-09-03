@@ -60,7 +60,7 @@ test('custom skin keeps fixed overlays out of the document flow on mobile', () =
   assert.match(css, /html\s*\{[^}]*-webkit-text-size-adjust:\s*100%;[^}]*text-size-adjust:\s*100%;/s)
   assert.match(css, /\.app\.has-custom-skin::before\s*\{[^}]*background-size:\s*cover;[^}]*filter:\s*blur\(20px\)/s)
   assert.match(css, /\.app\.has-custom-skin::after\s*\{[^}]*background-size:\s*cover, contain;/s)
-  assert.match(css, /@media\s*\(min-width:\s*3200px\)[^{]*\{[^}]*\.app-frame\s*\{[^}]*width:\s*min\(2600px,\s*82vw\);[^}]*zoom:\s*1\.2;/s)
+  assert.match(css, /@media\s*\(min-width:\s*3200px\)[^{]*\{[^}]*\.app-frame\s*\{[^}]*width:\s*min\(2200px,\s*72vw\);[^}]*zoom:\s*1\.15;/s)
   assert.match(css, /\.workspace\s*\{[^}]*min-height:\s*0;[^}]*flex:\s*1;/s)
   assert.match(css, /\.custom-skin-preview\.has-image\s*\{[^}]*min-height:\s*0;/s)
   assert.match(css, /\.custom-skin-preview\s*>\s*img\s*\{[^}]*width:\s*100%;[^}]*height:\s*auto;/s)
