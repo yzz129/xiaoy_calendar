@@ -2,8 +2,8 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $keystorePath = Join-Path $repoRoot 'release\xiaoy-calendar-release.jks'
-$apkOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.9-store.apk'
-$aabOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.9-store.aab'
+$apkOutput = Join-Path $repoRoot 'release\xiaoy-calendar-2.0-store.apk'
+$aabOutput = Join-Path $repoRoot 'release\xiaoy-calendar-2.0-store.aab'
 $shortBuildTemp = 'C:\jtmp'
 $previousTemp = $env:TEMP
 $previousTmp = $env:TMP

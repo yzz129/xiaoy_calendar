@@ -3,11 +3,11 @@
 一个把日历、工期统计、便签、学习/工作规划和 AI 助手放在一起的可爱效率应用。支持网页、PWA 与 Android，登录后以云端数据为主进行多端同步，同时保留基础日历的本地可用能力。
 
 [![在线使用](https://img.shields.io/badge/在线使用-calendar.yzzwnw.asia-2fc49f?style=for-the-badge)](https://calendar.yzzwnw.asia/)
-[![下载 APK](https://img.shields.io/badge/下载-Android_APK-ff7c70?style=for-the-badge&logo=android&logoColor=white)](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-1.9-109005.apk)
+[![下载 APK](https://img.shields.io/badge/下载-Android_APK-ff7c70?style=for-the-badge&logo=android&logoColor=white)](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-2.0-200000.apk)
 
-> 当前 Android 版本：**1.9**（versionCode 109005），支持 Android 7.0 及以上系统。
+> 当前 Android 版本：**2.0**（versionCode 200000），支持 Android 7.0 及以上系统。
 
-## 1.9 更新内容
+## 2.0 更新内容
 
 - 新增主题设置中心，可在云朵体与跟随系统字体之间切换
 - 支持前景内容透明度调节，背景壁纸保持独立显示
@@ -17,7 +17,7 @@
 - 小Y Agent 可以识别主题修改意图，并在用户确认后执行字体、皮肤和透明度操作
 - 管理员后台新增“用户壁纸”，可查看用户上传的原图、文件格式、大小和上传时间
 - 删除用户当前自定义皮肤时保留后台原图档案，避免审计记录丢失
-- Android 版本升级为 1.9 / versionCode 109005，可可靠覆盖较早的正式签名版本
+- Android 版本升级为 2.0 / versionCode 200000，可可靠覆盖较早的正式签名版本
 - 微信小程序源码已纳入仓库，当前上传版本为 2.4.0；预览框按图片比例自适应，壁纸遮罩更轻、更清晰
 
 ## 最新界面
@@ -30,10 +30,10 @@
 ## 下载与体验
 
 - 在线版：[https://calendar.yzzwnw.asia/](https://calendar.yzzwnw.asia/)
-- Android APK：[从小Y日历官网下载最新版](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-1.9-109005.apk)
+- Android APK：[从小Y日历官网下载最新版](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-2.0-200000.apk)
 - 管理员入口：[https://calendar.yzzwnw.asia/admin/](https://calendar.yzzwnw.asia/admin/)
 
-正式签名的 1.9 APK 可以直接覆盖较早的正式版本，账号、本地日历记录和应用数据会保留。若手机安装的是早期 Debug 包或其他签名版本，Android 会因签名不同而拒绝覆盖，需要先备份数据并卸载旧包。
+正式签名的 2.0 APK 可以直接覆盖较早的正式版本，账号、本地日历记录和应用数据会保留。若手机安装的是早期 Debug 包或其他签名版本，Android 会因签名不同而拒绝覆盖，需要先备份数据并卸载旧包。
 
 ## 主要功能
 
@@ -158,7 +158,7 @@ npm run build:cloudflare
 npx wrangler pages deploy dist --project-name xiaoy-calendar --branch main
 ```
 
-`build:cloudflare` 会把本地 `release/xiaoy-calendar-1.9-store.apk` 临时放入 `dist/downloads`。APK 不进入 Git 仓库，也不会被 Capacitor 打进 Android 安装包。D1 数据库绑定、模型密钥和搜索密钥应通过 Cloudflare 控制台或 Wrangler Secrets 配置。
+`build:cloudflare` 会把本地 `release/xiaoy-calendar-2.0-store.apk` 临时放入 `dist/downloads`。APK 不进入 Git 仓库，也不会被 Capacitor 打进 Android 安装包。D1 数据库绑定、模型密钥和搜索密钥应通过 Cloudflare 控制台或 Wrangler Secrets 配置。
 
 ## 项目结构
 
