@@ -1,0 +1,7 @@
+.terms-page { padding-bottom: 60rpx; }
+.terms-card { padding: 38rpx 34rpx; }
+.terms-title { display: block; font-size: 38rpx; font-weight: 900; }
+.updated { display: block; margin-top: 10rpx; color: #91a4b6; font-size: 22rpx; }
+.terms-section { margin-top: 36rpx; }
+.terms-section > text { display: block; font-size: 29rpx; font-weight: 800; }
+.terms-copy { display: block; margin-top: 12rpx; color: #587087; font-size: 25rpx; font-weight: 500 !important; line-height: 1.8; }

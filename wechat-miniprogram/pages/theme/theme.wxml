@@ -1,0 +1,39 @@
+<view class="page-shell theme-page theme-{{theme}} {{fontClass}} {{skinClass}}" style="{{skinStyle}}">
+  <view class="theme-hero card"><view class="theme-mark">◉</view><view><text class="theme-title">主题设置</text><text class="theme-subtitle">字体和皮肤会自动同步到手机、电脑和小程序</text></view></view>
+
+  <view class="theme-section card">
+    <view class="section-heading"><text>选择字体</text><text>决定整个小程序的文字样式</text></view>
+    <view class="option-grid">
+      <button class="theme-option cloud-preview {{fontTheme === 'cloud' ? 'selected' : ''}}" data-font="cloud" bindtap="selectFont"><text class="option-name">云朵体</text><text class="option-note">小Y日历默认字体</text><text wx:if="{{fontTheme === 'cloud'}}" class="current-badge">✓ 当前使用</text></button>
+      <button class="theme-option system-preview {{fontTheme === 'system' ? 'selected' : ''}}" data-font="system" bindtap="selectFont"><text class="option-name">跟随系统字体</text><text class="option-note">跟随当前主题字体</text><text wx:if="{{fontTheme === 'system'}}" class="current-badge">✓ 当前使用</text></button>
+    </view>
+  </view>
+
+  <view class="theme-section card opacity-section">
+    <view class="section-heading"><text>内容透明度</text><text>调整全部前景内容，只有背景图片保持不变</text></view>
+    <view class="opacity-control">
+      <view class="opacity-value"><text>背景更突出</text><text>{{surfaceOpacity}}%</text></view>
+      <slider min="45" max="100" step="1" value="{{surfaceOpacity}}" activeColor="#20b88a" backgroundColor="#dce7ee" block-color="#79ddbd" block-size="24" bindchange="changeOpacity" />
+      <view class="opacity-labels"><text>45% 通透</text><text>100% 实色</text></view>
+    </view>
+  </view>
+
+  <view class="theme-section card">
+    <view class="section-heading"><text>选择皮肤</text><text>选择内置配色，或上传自己的图片</text></view>
+    <view class="option-grid skin-grid">
+      <button class="theme-option skin-option {{!skin.enabled && theme === 'light' ? 'selected' : ''}}" data-theme="light" bindtap="selectBuiltInSkin"><view class="skin-swatch light-swatch"><text></text><text></text></view><view><text class="option-name">云朵晴空</text><text class="option-note">清新明亮</text></view><text wx:if="{{!skin.enabled && theme === 'light'}}" class="current-badge">✓ 当前使用</text></button>
+      <button class="theme-option skin-option {{!skin.enabled && theme === 'berry-night' ? 'selected' : ''}}" data-theme="berry-night" bindtap="selectBuiltInSkin"><view class="skin-swatch night-swatch"><text></text><text></text></view><view><text class="option-name">莓果夜色</text><text class="option-note">柔和护眼</text></view><text wx:if="{{!skin.enabled && theme === 'berry-night'}}" class="current-badge">✓ 当前使用</text></button>
+    </view>
+
+    <view class="upload-panel {{skin.enabled ? 'active' : ''}}">
+      <text wx:if="{{skin.enabled}}" class="custom-current">✓ 当前使用</text>
+      <view class="skin-preview" style="{{previewStyle}}"><view wx:if="{{!previewPath}}"><text class="preview-icon">▧</text><text>图片预览</text></view><text wx:if="{{previewPath}}" class="crop-badge">✦ 完整画面＋智能配色</text></view>
+      <view class="upload-copy"><text>自定义图片皮肤</text><text>选图立即预览，完整保留画面并智能匹配按钮、卡片和文字</text></view>
+      <view wx:if="{{paletteSwatches.length}}" class="adaptive-palette"><view wx:for="{{paletteSwatches}}" wx:key="*this" style="background:{{item}}"></view><text>✦ 自适应 UI 配色已启用</text></view>
+      <button class="upload-button" loading="{{busy}}" disabled="{{busy}}" bindtap="uploadSkin">{{skin.enabled ? '更换并智能适配' : '上传并智能适配'}}</button>
+      <button wx:if="{{skin.enabled}}" class="remove-button" disabled="{{busy}}" bindtap="removeSkin">删除自定义皮肤</button>
+      <text class="upload-help">上传图片 → AI 选取主体 → 本机按像素面积精准取色 → 生成清晰可读的 UI 主题 → 同步到三端。支持 JPG、PNG、WebP，最大 15MB。</text>
+    </view>
+    <view wx:if="{{status}}" class="theme-status">{{busy ? '◌ ' : '✓ '}}{{status}}</view>
+  </view>
+</view>

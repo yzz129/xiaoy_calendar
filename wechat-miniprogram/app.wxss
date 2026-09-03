@@ -1,0 +1,182 @@
+page {
+  --paper: #ffffff;
+  --paper-soft: #fbfdfc;
+  --ink: #16324f;
+  --text: #536b80;
+  --muted: #91a2b1;
+  --line: #dce7ee;
+  --mint: #79ddbd;
+  --mint-dark: #20b88a;
+  --mint-soft: #e8f8f2;
+  --coral: #ff806d;
+  --coral-soft: #fff0ed;
+  --blue-soft: #edf7ff;
+  --yellow: #ffd968;
+  min-height: 100%;
+  background: #f8fcfb;
+  color: var(--ink);
+  font-family: "XY Rounded", "XY Rounded Preview", "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+button {
+  margin: 0;
+  font: inherit;
+}
+
+input,
+textarea {
+  font-family: "XY Rounded", "XY Rounded Preview", "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+.xy-placeholder {
+  color: var(--muted);
+  font-family: "XY Rounded", "XY Rounded Preview", "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+button::after {
+  border: 0;
+}
+
+.page-shell {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 20rpx;
+}
+
+.page-shell > view,
+.login-page > view,
+.admin-page > view {
+  opacity: var(--content-opacity, .88);
+}
+
+.font-cloud,
+.font-cloud view,
+.font-cloud button,
+.font-cloud input,
+.font-cloud textarea,
+.font-cloud text {
+  font-family: "XY Doodle", "XY Doodle Preview", "XY Rounded", "XY Rounded Preview", "Microsoft YaHei", "PingFang SC", sans-serif !important;
+}
+
+.font-system,
+.font-system view,
+.font-system button,
+.font-system input,
+.font-system textarea,
+.font-system text {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif !important;
+}
+
+.theme-berry-night {
+  --paper: #0e2239;
+  --paper-soft: #132b45;
+  --ink: #f4fbff;
+  --text: #b9cad7;
+  --muted: #879cad;
+  --line: #29455e;
+  --mint-soft: #173e42;
+  --coral-soft: #402d37;
+  --blue-soft: #1d3951;
+  background-color: #0b1d31;
+  color: var(--ink);
+}
+
+.login-page.theme-berry-night,
+.admin-page.theme-berry-night {
+  background-color: #0b1d31;
+}
+
+.skin-active {
+  min-height: 100vh;
+  background-attachment: fixed;
+}
+
+.card {
+  background: var(--surface-paper, var(--paper));
+  border: 2rpx solid var(--line);
+  border-radius: 30rpx 24rpx 34rpx 22rpx;
+  box-shadow: 10rpx 12rpx 0 rgba(220, 231, 238, 0.8);
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  min-height: 88rpx;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.primary-button {
+  background: var(--mint);
+  color: var(--ink);
+  border: 2rpx solid var(--ink);
+  box-shadow: 6rpx 7rpx 0 var(--ink);
+}
+
+.secondary-button {
+  background: var(--blue-soft);
+  color: var(--ink);
+}
+
+.danger-button {
+  background: #fff0ee;
+  color: #e66c5f;
+}
+
+.field {
+  display: block;
+  margin-top: 28rpx;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 12rpx;
+  color: #587087;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 88rpx;
+  padding: 0 28rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 24rpx;
+  background: var(--surface-paper, #fff);
+  color: var(--ink);
+}
+
+.empty-state {
+  padding: 64rpx 30rpx;
+  color: var(--muted);
+  text-align: center;
+}
+
+.theme-page .theme-option,
+.theme-page .upload-panel,
+.theme-page .opacity-control {
+  background: var(--surface-paper, var(--paper));
+}
+
+.opacity-control {
+  margin-top: 22rpx;
+  padding: 20rpx 22rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 28rpx 22rpx 30rpx 20rpx;
+}
+
+.opacity-value,
+.opacity-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.opacity-value text:first-child { color: var(--text); font-size: 22rpx; font-weight: 900; }
+.opacity-value text:last-child { color: var(--mint-dark); font-family: "XY Doodle", "XY Rounded", sans-serif; font-size: 39rpx; font-weight: 900; }
+.opacity-control slider { margin: 10rpx 0 2rpx; }
+.opacity-labels { color: var(--muted); font-size: 18rpx; font-weight: 700; }

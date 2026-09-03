@@ -1,0 +1,27 @@
+{
+  "pages": [
+    "pages/calendar/calendar",
+    "pages/theme/theme",
+    "pages/login/login",
+    "pages/day/day",
+    "pages/plans/plans",
+    "pages/profile/profile",
+    "pages/admin/admin",
+    "pages/terms/terms",
+    "pages/privacy/privacy"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#f4fbff",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "小Y日历",
+    "backgroundColor": "#f4fbff",
+    "backgroundTextStyle": "light"
+  },
+  "networkTimeout": {
+    "request": 30000,
+    "downloadFile": 30000
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

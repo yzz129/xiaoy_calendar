@@ -1,0 +1,871 @@
+const app = getApp()
+const api = require('../../utils/api')
+const share = require('../../utils/share')
+const { createTypewriterController } = require('../../utils/agent-typewriter')
+const { renderAgentRichText } = require('../../utils/agent-rich-text')
+const { HISTORY_LIMIT, historyKey, normalizeMessages, mergeHistories } = require('../../utils/agent-history')
+const { WEEK_LABELS, monthCells, toKey, fromKey, dateTitle, rangeStats } = require('../../utils/date')
+
+const QUICK_PROMPTS = ['帮我安排一个学习计划', '根据我的空闲时间规划工作', '看看我这个月的安排']
+const DOWNLOAD_PAGE = 'https://calendar.yzzwnw.asia/download/'
+const PET_POSITION_KEY = 'xy-calendar-pet-position-v1'
+const PET_HIDDEN_KEY = 'xy-calendar-pet-hidden-v1'
+const PET_BUBBLE_SIZE_KEY = 'xy-calendar-pet-bubble-size-v1'
+const PET_IMAGES = {
+  idle: '/assets/pet/agent-focused.png',
+  focused: '/assets/pet/agent-focused.png',
+  thinking: '/assets/pet/agent-thinking.png',
+  celebrate: '/assets/pet/agent-celebrate.png',
+  sleepy: '/assets/pet/agent-sleepy.png',
+}
+const PET_STATUS = {
+  idle: '待命',
+  focused: '专注陪伴',
+  thinking: '正在思考',
+  celebrate: '开心庆祝',
+  sleepy: '正在休息',
+}
+
+function ambientPetMoods(date = new Date()) {
+  const hour = date.getHours()
+  return hour >= 22 || hour < 7
+    ? ['sleepy', 'idle']
+    : ['idle', 'focused', 'idle', 'thinking']
+}
+
+function tasksForDate(snapshot, dateKey) {
+  const weekday = fromKey(dateKey).getDay()
+  return (snapshot.plans || []).flatMap((plan) => {
+    if (plan.start > dateKey || plan.end < dateKey || !(plan.weekdays || []).includes(weekday)) return []
+    const override = snapshot.planTaskOverrides?.[plan.id]?.[dateKey] || {}
+    if (override.skipped) return []
+    return [{
+      key: `${plan.id}:${dateKey}`,
+      planId: plan.id,
+      progressKey: dateKey,
+      planTitle: plan.title,
+      title: override.title || plan.dailyTask || plan.title,
+      type: (plan.planType || plan.type) === 'work' ? 'work' : 'study',
+      done: Boolean(snapshot.planProgress?.[plan.id]?.[dateKey]),
+    }]
+  })
+}
+
+function monthBounds(year, month) {
+  return {
+    start: `${year}-${String(month).padStart(2, '0')}-01`,
+    end: toKey(new Date(year, month, 0)),
+  }
+}
+
+function buildView(year, month, snapshot, selectedKey) {
+  const todayKey = toKey(new Date())
+  const cells = monthCells(year, month).map((cell) => {
+    const entry = snapshot.entries[cell.key] || {}
+    const notes = (snapshot.notes[cell.key] || []).filter((note) => String(note.text || '').trim())
+    const tasks = tasksForDate(snapshot, cell.key)
+    return {
+      ...cell,
+      today: cell.key === todayKey,
+      selected: cell.key === selectedKey,
+      status: entry.status || '',
+      calendarLabel: cell.meta.eventLabel || cell.meta.lunarLabel,
+      event: Boolean(cell.meta.eventLabel),
+      holidayType: cell.meta.holiday?.type || '',
+      holidayTag: cell.meta.holiday ? (cell.meta.holiday.type === 'work' ? '班' : '休') : '',
+      study: tasks.some((task) => task.type === 'study'),
+      work: tasks.some((task) => task.type === 'work'),
+      studyDone: tasks.filter((task) => task.type === 'study').every((task) => task.done),
+      workDone: tasks.filter((task) => task.type === 'work').every((task) => task.done),
+      planCount: tasks.length,
+      noteCount: notes.length,
+    }
+  })
+  let completed = 0
+  let leave = 0
+  let duration = 0
+  const prefix = `${year}-${String(month).padStart(2, '0')}`
+  Object.keys(snapshot.entries || {}).forEach((key) => {
+    const entry = snapshot.entries[key]
+    if (entry.status === 'work') duration += Number(entry.duration || 0)
+    if (!key.startsWith(prefix)) return
+    if (entry.status === 'work') completed += 1
+    if (entry.status === 'leave') leave += 1
+  })
+  const selectedEntry = snapshot.entries[selectedKey] || {}
+  const selectedTasks = tasksForDate(snapshot, selectedKey)
+  const selectedNotes = snapshot.notes[selectedKey] || []
+  const selectedDate = fromKey(selectedKey)
+  return {
+    cells,
+    monthTitle: `${year}年${month}月`,
+    stats: { completed, leave, duration: Number.isInteger(duration) ? duration : Number(duration.toFixed(1)) },
+    activePlanCount: (snapshot.plans || []).filter((plan) => plan.end >= todayKey).length,
+    selectedTitle: dateTitle(selectedKey),
+    daySheetTitle: `${selectedKey === todayKey ? '今天 · ' : ''}${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`,
+    selectedSummary: selectedEntry.status || selectedTasks.length || selectedNotes.length
+      ? `${selectedEntry.status === 'work' ? `工作 ${selectedEntry.duration || 0} 天` : selectedEntry.status === 'leave' ? '请假' : selectedEntry.status === 'rest' ? '休息' : '待设置'} · ${selectedTasks.length} 项规划 · ${selectedNotes.length} 条便签`
+      : '待设置',
+  }
+}
+
+function agentCalendarContext(page) {
+  const snapshot = app.globalData.snapshot
+  return {
+    today: toKey(new Date()), timezone: 'Asia/Shanghai', month: page.data.monthTitle,
+    nickname: app.globalData.user?.nickname || '', theme: snapshot.theme || 'light',
+    fontTheme: snapshot.fontTheme || 'cloud', surfaceOpacity: snapshot.surfaceOpacity || 88,
+    customSkinEnabled: Boolean(snapshot.skin?.enabled), stats: page.data.stats,
+    recentAvailability: page.data.cells.filter((cell) => cell.current).map((cell) => ({
+      date: cell.key, weekday: fromKey(cell.key).getDay(), status: snapshot.entries[cell.key]?.status || '',
+      duration: Number(snapshot.entries[cell.key]?.duration || 0), notes: (snapshot.notes[cell.key] || []).slice(0, 8),
+      plannedTasks: tasksForDate(snapshot, cell.key).slice(0, 8),
+    })),
+    plans: (snapshot.plans || []).slice(0, 20),
+  }
+}
+
+function decorateThemeActions(actions) {
+  const labels = {
+    toggle_theme: '切换主题', set_theme: '更换内置皮肤', set_font_theme: '更换字体',
+    set_surface_opacity: '调整内容透明度', open_theme_settings: '打开主题设置',
+  }
+  return (actions || []).filter((action) => labels[action?.kind]).map((action) => {
+    let description = '修改主题设置'
+    if (action.kind === 'set_theme') description = action.theme === 'berry-night' ? '使用莓果夜色，并停用自定义壁纸' : '使用云朵晴空，并停用自定义壁纸'
+    if (action.kind === 'set_font_theme') description = action.fontTheme === 'system' ? '跟随当前手机系统字体' : '使用小Y日历云朵体'
+    if (action.kind === 'set_surface_opacity') description = `背景不变，其他内容设为 ${action.surfaceOpacity}%`
+    if (action.kind === 'open_theme_settings') description = '进入字体、透明度和壁纸设置'
+    if (action.kind === 'toggle_theme') description = '在云朵晴空与莓果夜色之间切换'
+    return { ...action, label: labels[action.kind], description, applied: false }
+  })
+}
+
+function decoratePetMessage(message) {
+  const content = String(message?.content || '')
+  return { ...message, content, blocks: renderAgentRichText(content) }
+}
+
+function petTouchPoint(event, changed = false) {
+  const touches = changed ? event?.changedTouches : event?.touches
+  const touch = touches?.[0] || event?.touches?.[0] || event?.changedTouches?.[0]
+  if (!touch) return null
+  const x = Number(touch.clientX ?? touch.pageX ?? touch.x)
+  const y = Number(touch.clientY ?? touch.pageY ?? touch.y)
+  return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null
+}
+
+function apiPetMessages(messages) {
+  return (messages || []).filter((message) => message?.content).map((message) => ({ role: message.role, content: message.content }))
+}
+
+Page({
+  data: {
+    fontsReady: Boolean(app.globalData.brandFontsLoaded),
+    user: {}, loggedIn: false, isAdmin: false, year: 0, month: 0, monthTitle: '', weekLabels: WEEK_LABELS, cells: [],
+    stats: { completed: 0, leave: 0, duration: 0 }, activePlanCount: 0,
+    selectedKey: '', selectedTitle: '', daySheetTitle: '', selectedSummary: '待设置',
+    dayOpen: false, dayTab: 'notes', dayEntry: { status: '', duration: 1 }, dayNotes: [], dayTasks: [], dayNewNote: '', dayComposeOpen: false,
+    rangeOpen: false, rangeStart: '', rangeEnd: '', rangeStats: { workDays: 0, duration: 0 },
+    theme: 'light', fontClass: 'font-cloud', skinClass: '', skinStyle: '', petOpen: false, petInput: '', petInputFocus: false, petBusy: false, petError: '', petPhase: '待命', petScrollTarget: 'pet-chat-end-0',
+    petMood: 'idle', petAmbientMood: 'idle', petCelebrating: false, petStatus: PET_STATUS.idle,
+    petImage: PET_IMAGES.idle, petMessages: [], petResult: { questions: [], planDrafts: [], actionDrafts: [] },
+    petApplied: false, quickPrompts: QUICK_PROMPTS, petX: 0, petY: 0, petDragging: false,
+    petHidden: false, petHiddenX: 0, petDockSide: 'right',
+    bubbleX: 8, bubbleY: 8, bubbleWidth: 300, bubbleHeight: 330, bubbleTailX: 40, bubblePlacement: 'above', bubbleResizing: false,
+  },
+
+  onLoad() {
+    share.enableShareMenu()
+    const today = new Date()
+    const bounds = monthBounds(today.getFullYear(), today.getMonth() + 1)
+    const petAmbientMood = ambientPetMoods(today)[0]
+    this.setData({
+      year: today.getFullYear(), month: today.getMonth() + 1, selectedKey: toKey(today), rangeStart: bounds.start, rangeEnd: bounds.end,
+      petAmbientMood, petMood: petAmbientMood, petImage: PET_IMAGES[petAmbientMood], petStatus: PET_STATUS[petAmbientMood],
+    })
+    this._petDisposed = false
+    Promise.resolve(app.globalData.brandFontsReady).then((loaded) => {
+      if (loaded && !this._petDisposed) this.setData({ fontsReady: true })
+    })
+    this._petAutoFollow = true
+    this._petScrollTouching = false
+    this._petTypewriter = createTypewriterController({
+      interval: 18,
+      onUpdate: (id, content, streaming) => this.updatePetStreamMessage(id, content, streaming),
+    })
+    this.initPetPosition()
+    this.restoreLocalPetHistory()
+  },
+
+  onShareAppMessage() {
+    return share.appMessage({ title: '小Y日历｜你的日历与规划搭子' })
+  },
+
+  onShareTimeline() {
+    return share.timeline({ title: '小Y日历｜你的日历与规划搭子' })
+  },
+
+  onShow() {
+    this.startPetMoodTimer()
+    const loggedIn = app.hasSession()
+    const needsInitialSync = loggedIn && !app.globalData.syncReady
+    this.refreshView()
+    app.applyTheme(this)
+    this.restoreLocalPetHistory()
+    if (!loggedIn) return
+    app.ensureSession({ maxAge: 5 * 60 * 1000 })
+      .then(() => {
+        if (needsInitialSync) this.refreshView()
+        app.applyTheme(this)
+        this.restoreLocalPetHistory()
+        return this.restoreCloudPetHistory()
+      })
+      .catch(() => this.refreshView())
+  },
+
+  onHide() {
+    this.persistPetHistory()
+    this.stopPetMoodTimer()
+  },
+  onUnload() {
+    this.persistPetHistory()
+    this._petDisposed = true
+    if (this._petStreamRequest?.abort) this._petStreamRequest.abort()
+    this._petTypewriter?.dispose()
+    this.stopPetMoodTimer()
+    clearTimeout(this._petTapTimer)
+    clearTimeout(this._hiddenDragTapTimer)
+    clearTimeout(this._petScrollTouchTimer)
+  },
+
+  async onPullDownRefresh() {
+    if (!app.hasSession()) {
+      this.refreshView()
+      wx.stopPullDownRefresh()
+      wx.showToast({ title: '体验模式使用本地数据', icon: 'none' })
+      return
+    }
+    try { await app.pullSnapshot(); this.refreshView(); wx.showToast({ title: '同步完成', icon: 'success' }) }
+    catch (error) { wx.showToast({ title: error.message || '同步失败', icon: 'none' }) }
+    finally { wx.stopPullDownRefresh() }
+  },
+
+  refreshView() {
+    const snapshot = app.globalData.snapshot
+    this.setData({
+      user: app.globalData.user || {}, loggedIn: app.hasSession(), isAdmin: app.globalData.user?.role === 'admin', theme: snapshot.theme || 'light',
+      ...buildView(this.data.year, this.data.month, snapshot, this.data.selectedKey),
+      rangeStats: rangeStats(snapshot.entries, this.data.rangeStart, this.data.rangeEnd),
+    })
+    if (this.data.dayOpen) this.refreshDaySheet()
+  },
+
+  refreshDaySheet() {
+    const snapshot = app.globalData.snapshot
+    this.setData({
+      dayEntry: { status: '', duration: 1, ...(snapshot.entries[this.data.selectedKey] || {}) },
+      dayNotes: snapshot.notes[this.data.selectedKey] || [],
+      dayTasks: tasksForDate(snapshot, this.data.selectedKey),
+    })
+  },
+
+  changeMonth(event) {
+    const date = new Date(this.data.year, this.data.month - 1 + Number(event.currentTarget.dataset.offset), 1)
+    const bounds = monthBounds(date.getFullYear(), date.getMonth() + 1)
+    this.setData({ year: date.getFullYear(), month: date.getMonth() + 1, selectedKey: bounds.start, rangeStart: bounds.start, rangeEnd: bounds.end })
+    this.refreshView()
+  },
+  goToday() {
+    const today = new Date(); const bounds = monthBounds(today.getFullYear(), today.getMonth() + 1)
+    this.setData({ year: today.getFullYear(), month: today.getMonth() + 1, selectedKey: toKey(today), rangeStart: bounds.start, rangeEnd: bounds.end }); this.refreshView()
+  },
+  selectDay(event) { this.setData({ selectedKey: event.currentTarget.dataset.key }); this.refreshView() },
+  openSelected() {
+    this.refreshDaySheet()
+    this.setData({ dayOpen: true, dayTab: this.data.dayTasks.length ? 'tasks' : 'notes', dayNewNote: '', dayComposeOpen: false }, () => this.fitPetToBounds(true))
+  },
+  closeDay() { this.setData({ dayOpen: false, dayNewNote: '', dayComposeOpen: false }, () => this.fitPetToBounds(false)); this.refreshView() },
+  setDayTab(event) { this.setData({ dayTab: event.currentTarget.dataset.tab }) },
+  setDayStatus(event) {
+    const requested = event.currentTarget.dataset.status
+    const status = this.data.dayEntry.status === requested ? '' : requested
+    app.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      entries: {
+        ...snapshot.entries,
+        [this.data.selectedKey]: {
+          ...snapshot.entries[this.data.selectedKey],
+          status,
+          duration: status === 'work' ? Number(snapshot.entries[this.data.selectedKey]?.duration || 1) : 0,
+        },
+      },
+    }))
+    this.refreshView()
+  },
+  adjustDayDuration(event) {
+    const delta = Number(event.currentTarget.dataset.delta || 0)
+    const duration = Math.max(0, Math.min(9, Number(this.data.dayEntry.duration || 0) + delta))
+    app.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      entries: {
+        ...snapshot.entries,
+        [this.data.selectedKey]: { ...snapshot.entries[this.data.selectedKey], status: 'work', duration },
+      },
+    }))
+    this.refreshView()
+  },
+  startDayNote() { this.setData({ dayComposeOpen: true }) },
+  inputDayNote(event) { this.setData({ dayNewNote: event.detail.value }) },
+  addDayNote() {
+    const text = this.data.dayNewNote.trim()
+    if (!text) return
+    const note = { id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, text, done: false }
+    app.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      notes: {
+        ...snapshot.notes,
+        [this.data.selectedKey]: [...(snapshot.notes[this.data.selectedKey] || []), note],
+      },
+    }))
+    this.setData({ dayNewNote: '', dayComposeOpen: false })
+    this.refreshView()
+  },
+  toggleDayNote(event) {
+    const id = event.currentTarget.dataset.id
+    app.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      notes: {
+        ...snapshot.notes,
+        [this.data.selectedKey]: (snapshot.notes[this.data.selectedKey] || []).map((note) => note.id === id ? { ...note, done: !note.done } : note),
+      },
+    }))
+    this.refreshView()
+  },
+  removeDayNote(event) {
+    const id = event.currentTarget.dataset.id
+    app.updateSnapshot((snapshot) => ({
+      ...snapshot,
+      notes: {
+        ...snapshot.notes,
+        [this.data.selectedKey]: (snapshot.notes[this.data.selectedKey] || []).filter((note) => note.id !== id),
+      },
+    }))
+    this.refreshView()
+  },
+  toggleDayTask(event) {
+    const planId = event.currentTarget.dataset.plan
+    const progressKey = event.currentTarget.dataset.progress
+    app.updateSnapshot((snapshot) => {
+      const current = { ...(snapshot.planProgress[planId] || {}) }
+      if (current[progressKey]) delete current[progressKey]
+      else current[progressKey] = true
+      return { ...snapshot, planProgress: { ...snapshot.planProgress, [planId]: current } }
+    })
+    this.refreshView()
+  },
+  openLogin() { wx.navigateTo({ url: '/pages/login/login' }) },
+  requireLogin(feature) {
+    if (app.hasSession()) return true
+    wx.showModal({
+      title: '登录后可使用',
+      content: `${feature}需要登录以启用账号与云端同步。你可以继续体验日历浏览和本地记录。`,
+      confirmText: '去登录',
+      cancelText: '继续体验',
+      success: (result) => { if (result.confirm) this.openLogin() },
+    })
+    return false
+  },
+  openPlans() { if (this.requireLogin('规划中心')) wx.navigateTo({ url: '/pages/plans/plans' }) },
+  openProfile() { if (this.requireLogin('个人中心')) wx.navigateTo({ url: '/pages/profile/profile' }) },
+  openAdmin() { if (this.requireLogin('管理员后台')) wx.navigateTo({ url: '/pages/admin/admin' }) },
+  copyDownload() { wx.setClipboardData({ data: DOWNLOAD_PAGE, success: () => wx.showToast({ title: '下载地址已复制', icon: 'none' }) }) },
+  openTheme() { wx.navigateTo({ url: '/pages/theme/theme' }) },
+  async logout() {
+    const result = await new Promise((resolve) => wx.showModal({ title: '退出登录', content: '云端数据会保留，确定退出吗？', success: resolve }))
+    if (!result.confirm) return
+    await app.logout(); wx.reLaunch({ url: '/pages/calendar/calendar' })
+  },
+  toggleRange() { this.setData({ rangeOpen: !this.data.rangeOpen }) },
+  changeRangeStart(event) { this.setData({ rangeStart: event.detail.value }); this.refreshView() },
+  changeRangeEnd(event) { this.setData({ rangeEnd: event.detail.value }); this.refreshView() },
+
+  resolvePetMood(overrides = {}) {
+    const state = { ...this.data, ...overrides }
+    if (state.petBusy) return 'thinking'
+    if (state.petCelebrating || state.petDragging) return 'celebrate'
+    if (state.petOpen) return state.petMessages.length || String(state.petInput || '').trim() ? 'focused' : 'idle'
+    return state.petAmbientMood || ambientPetMoods()[0]
+  },
+  refreshPetMood(overrides = {}) {
+    const petMood = this.resolvePetMood(overrides)
+    this.setData({ petMood, petImage: PET_IMAGES[petMood] || PET_IMAGES.idle, petStatus: PET_STATUS[petMood] || PET_STATUS.idle })
+  },
+  cycleAmbientPetMood() {
+    const moods = ambientPetMoods()
+    const currentIndex = moods.indexOf(this.data.petAmbientMood)
+    const petAmbientMood = moods[(currentIndex + 1) % moods.length] || moods[0]
+    this.setData({ petAmbientMood }, () => this.refreshPetMood())
+  },
+  startPetMoodTimer() {
+    this.stopPetMoodTimer()
+    const moods = ambientPetMoods()
+    const petAmbientMood = moods.includes(this.data.petAmbientMood) ? this.data.petAmbientMood : moods[0]
+    this.setData({ petAmbientMood, petCelebrating: false }, () => this.refreshPetMood())
+    this._petMoodTimer = setInterval(() => {
+      if (this.data.petOpen || this.data.petBusy || this.data.petDragging || this.data.petCelebrating || this.data.petHidden) return
+      this.cycleAmbientPetMood()
+    }, 7200)
+  },
+  stopPetMoodTimer() {
+    clearInterval(this._petMoodTimer)
+    clearTimeout(this._petCelebrateTimer)
+    this._petMoodTimer = null
+    this._petCelebrateTimer = null
+  },
+  celebratePet() {
+    clearTimeout(this._petCelebrateTimer)
+    this.setData({ petCelebrating: true }, () => this.refreshPetMood())
+    this._petCelebrateTimer = setTimeout(() => {
+      this._petCelebrateTimer = null
+      this.setData({ petCelebrating: false }, () => this.refreshPetMood())
+    }, 4200)
+  },
+
+  getPetBounds(dayOpen = this.data.dayOpen) {
+    const info = typeof wx.getWindowInfo === 'function' ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    const width = Number(info.windowWidth || 375)
+    const height = Number(info.windowHeight || 667)
+    const size = Math.round(width * 112 / 750)
+    const margin = Math.max(6, Math.round(width * 14 / 750))
+    const minY = Math.max(margin, Number(info.safeArea?.top || 0) + 4)
+    const sheetTop = Math.round(height * 0.28)
+    return {
+      width, height, size, margin,
+      minX: margin,
+      maxX: Math.max(margin, width - size - margin),
+      minY,
+      maxY: Math.max(minY, (dayOpen ? sheetTop : height) - size - margin),
+    }
+  },
+  clampPetPosition(x, y, dayOpen = this.data.dayOpen) {
+    const bounds = this.getPetBounds(dayOpen)
+    return {
+      x: Math.max(bounds.minX, Math.min(bounds.maxX, Number(x) || 0)),
+      y: Math.max(bounds.minY, Math.min(bounds.maxY, Number(y) || 0)),
+      bounds,
+    }
+  },
+  getHiddenPetState(x = this.data.petX) {
+    const bounds = this.getPetBounds(false)
+    const side = Number(x) + bounds.size / 2 < bounds.width / 2 ? 'left' : 'right'
+    return { petDockSide: side, petHiddenX: Math.round(side === 'left' ? -bounds.size / 2 : bounds.width - bounds.size / 2) }
+  },
+  getBubbleSizeLimits() {
+    const bounds = this.getPetBounds(false)
+    return {
+      minWidth: Math.min(270, bounds.width - 16),
+      maxWidth: Math.max(250, bounds.width - 16),
+      minHeight: Math.min(220, bounds.height - 16),
+      maxHeight: Math.max(190, Math.min(bounds.height * 0.72, bounds.height - 16)),
+      bounds,
+    }
+  },
+  clampBubbleSize(width, height) {
+    const limits = this.getBubbleSizeLimits()
+    const fallbackWidth = Math.min(limits.maxWidth, limits.bounds.width - 42)
+    const fallbackHeight = Math.min(limits.maxHeight, 330)
+    return {
+      width: Math.round(Math.max(limits.minWidth, Math.min(limits.maxWidth, Number(width) || fallbackWidth))),
+      height: Math.round(Math.max(limits.minHeight, Math.min(limits.maxHeight, Number(height) || fallbackHeight))),
+    }
+  },
+  getBubbleLayout(petX = this.data.petX, petY = this.data.petY, width = this.data.bubbleWidth, height = this.data.bubbleHeight) {
+    const bounds = this.getPetBounds(false)
+    const size = this.clampBubbleSize(width, height)
+    const petCenterX = Number(petX) + bounds.size / 2
+    const left = Math.max(8, Math.min(bounds.width - size.width - 8, petCenterX - size.width / 2))
+    const aboveSpace = Math.max(0, Number(petY) - 12)
+    const belowSpace = Math.max(0, bounds.height - Number(petY) - bounds.size - 12)
+    const placement = aboveSpace >= belowSpace ? 'above' : 'below'
+    const top = placement === 'above'
+      ? Math.max(8, Number(petY) - size.height - 12)
+      : Math.min(bounds.height - size.height - 8, Number(petY) + bounds.size + 12)
+    return {
+      bubbleX: Math.round(left), bubbleY: Math.round(top), bubbleWidth: size.width, bubbleHeight: size.height,
+      bubbleTailX: Math.round(Math.max(30, Math.min(size.width - 30, petCenterX - left))), bubblePlacement: placement,
+    }
+  },
+  initPetPosition() {
+    const bounds = this.getPetBounds(false)
+    let saved = null
+    let bubble = null
+    let hidden = false
+    try { saved = wx.getStorageSync(PET_POSITION_KEY) } catch (error) { saved = null }
+    try { bubble = wx.getStorageSync(PET_BUBBLE_SIZE_KEY) } catch (error) { bubble = null }
+    try { hidden = Boolean(wx.getStorageSync(PET_HIDDEN_KEY)) } catch (error) { hidden = false }
+    const x = saved && Number.isFinite(Number(saved.xRatio)) ? bounds.minX + Number(saved.xRatio) * (bounds.maxX - bounds.minX) : bounds.maxX
+    const y = saved && Number.isFinite(Number(saved.yRatio)) ? bounds.minY + Number(saved.yRatio) * (bounds.maxY - bounds.minY) : Math.max(bounds.minY, bounds.maxY - Math.round(bounds.width * 96 / 750))
+    const next = this.clampPetPosition(x, y, false)
+    const bubbleSize = this.clampBubbleSize(bubble?.width, bubble?.height)
+    this.setData({
+      petX: Math.round(next.x), petY: Math.round(next.y), petHidden: hidden,
+      ...this.getHiddenPetState(next.x), ...this.getBubbleLayout(next.x, next.y, bubbleSize.width, bubbleSize.height),
+    })
+  },
+  fitPetToBounds(dayOpen = this.data.dayOpen) {
+    const next = this.clampPetPosition(this.data.petX, this.data.petY, dayOpen)
+    this.setData({ petX: Math.round(next.x), petY: Math.round(next.y), ...this.getHiddenPetState(next.x), ...this.getBubbleLayout(next.x, next.y) })
+  },
+  saveBubbleSize() {
+    try { wx.setStorageSync(PET_BUBBLE_SIZE_KEY, { width: this.data.bubbleWidth, height: this.data.bubbleHeight }) } catch (error) {}
+  },
+  savePetPosition() {
+    const bounds = this.getPetBounds(false)
+    const xRange = Math.max(1, bounds.maxX - bounds.minX)
+    const yRange = Math.max(1, bounds.maxY - bounds.minY)
+    const position = this.clampPetPosition(this.data.petX, this.data.petY, false)
+    try {
+      wx.setStorageSync(PET_POSITION_KEY, {
+        xRatio: Math.max(0, Math.min(1, (position.x - bounds.minX) / xRange)),
+        yRatio: Math.max(0, Math.min(1, (position.y - bounds.minY) / yRange)),
+      })
+    } catch (error) {}
+  },
+  startPetDrag(event) {
+    if (this.data.petHidden) return
+    const touch = petTouchPoint(event)
+    if (!touch) return
+    this._petDrag = {
+      startX: touch.x,
+      startY: touch.y,
+      offsetX: touch.x - this.data.petX,
+      offsetY: touch.y - this.data.petY,
+      moved: false,
+    }
+    this.setData({ petDragging: true }, () => this.refreshPetMood())
+  },
+  movePet(event) {
+    const touch = petTouchPoint(event)
+    if (!touch || !this._petDrag) return
+    const distance = Math.hypot(touch.x - this._petDrag.startX, touch.y - this._petDrag.startY)
+    if (distance > 4) this._petDrag.moved = true
+    const next = this.clampPetPosition(touch.x - this._petDrag.offsetX, touch.y - this._petDrag.offsetY)
+    this.setData({ petX: Math.round(next.x), petY: Math.round(next.y), ...this.getHiddenPetState(next.x), ...this.getBubbleLayout(next.x, next.y) })
+  },
+  endPetDrag() {
+    const moved = Boolean(this._petDrag?.moved)
+    this._petDrag = null
+    this.setData({ petDragging: false }, () => this.refreshPetMood())
+    if (!moved) return
+    this._petSuppressTap = true
+    clearTimeout(this._petTapTimer)
+    this._petTapTimer = setTimeout(() => { this._petSuppressTap = false }, 320)
+    this.savePetPosition()
+  },
+  startHiddenPetDrag(event) {
+    const touch = petTouchPoint(event)
+    if (!touch) return
+    this._petHiddenDrag = {
+      startX: touch.x,
+      startY: touch.y,
+      offsetY: touch.y - this.data.petY,
+      moved: false,
+    }
+    this.setData({ petDragging: true }, () => this.refreshPetMood())
+  },
+  moveHiddenPet(event) {
+    const touch = petTouchPoint(event)
+    if (!touch || !this._petHiddenDrag) return
+    const distance = Math.hypot(touch.x - this._petHiddenDrag.startX, touch.y - this._petHiddenDrag.startY)
+    if (distance > 4) this._petHiddenDrag.moved = true
+    const bounds = this.getPetBounds(false)
+    const side = touch.x < bounds.width / 2 ? 'left' : 'right'
+    const y = Math.max(bounds.minY, Math.min(bounds.maxY, touch.y - this._petHiddenDrag.offsetY))
+    const petX = side === 'left' ? bounds.minX : bounds.maxX
+    this.setData({
+      petX: Math.round(petX),
+      petY: Math.round(y),
+      petDockSide: side,
+      petHiddenX: Math.round(side === 'left' ? -bounds.size / 2 : bounds.width - bounds.size / 2),
+      petDragging: true,
+    })
+  },
+  endHiddenPetDrag(event) {
+    const finalTouch = petTouchPoint(event, true)
+    const moved = Boolean(this._petHiddenDrag?.moved || (finalTouch && this._petHiddenDrag
+      && Math.hypot(finalTouch.x - this._petHiddenDrag.startX, finalTouch.y - this._petHiddenDrag.startY) > 4))
+    this._petHiddenDrag = null
+    this.setData({ petDragging: false }, () => this.refreshPetMood())
+    if (!moved) return
+    this._hiddenDragSuppressTap = true
+    clearTimeout(this._hiddenDragTapTimer)
+    this._hiddenDragTapTimer = setTimeout(() => { this._hiddenDragSuppressTap = false }, 320)
+    this.savePetPosition()
+  },
+  startBubbleResize(event) {
+    const touch = petTouchPoint(event)
+    if (!touch) return
+    this._bubbleResize = { startX: touch.x, startY: touch.y, width: this.data.bubbleWidth, height: this.data.bubbleHeight, moved: false }
+    this.setData({ bubbleResizing: true })
+  },
+  resizeBubble(event) {
+    const touch = petTouchPoint(event)
+    if (!touch || !this._bubbleResize) return
+    const dx = touch.x - this._bubbleResize.startX
+    const dy = touch.y - this._bubbleResize.startY
+    if (Math.hypot(dx, dy) > 4) this._bubbleResize.moved = true
+    const size = this.clampBubbleSize(this._bubbleResize.width + dx, this._bubbleResize.height + dy)
+    this.setData(this.getBubbleLayout(this.data.petX, this.data.petY, size.width, size.height))
+  },
+  endBubbleResize() {
+    if (!this._bubbleResize) return
+    const moved = this._bubbleResize.moved
+    this._bubbleResize = null
+    this.setData({ bubbleResizing: false })
+    this.saveBubbleSize()
+    if (moved) {
+      this._bubbleResizeTapSuppressed = true
+      clearTimeout(this._bubbleResizeTapTimer)
+      this._bubbleResizeTapTimer = setTimeout(() => { this._bubbleResizeTapSuppressed = false }, 320)
+    }
+  },
+  cycleBubbleSize() {
+    if (this._bubbleResizeTapSuppressed) return
+    const limits = this.getBubbleSizeLimits()
+    const isLarge = this.data.bubbleWidth > limits.minWidth + 20 || this.data.bubbleHeight > limits.minHeight + 40
+    const width = isLarge ? limits.minWidth : limits.maxWidth
+    const height = isLarge ? limits.minHeight : limits.maxHeight
+    this.setData(this.getBubbleLayout(this.data.petX, this.data.petY, width, height), () => this.saveBubbleSize())
+  },
+  stopPetEvent() {},
+  hidePet() {
+    clearTimeout(this._petTapTimer)
+    this._petDrag = null
+    this._petSuppressTap = false
+    try { wx.setStorageSync(PET_HIDDEN_KEY, true) } catch (error) {}
+    this.setData({ petOpen: false, petDragging: false, petHidden: true, ...this.getHiddenPetState() }, () => this.refreshPetMood())
+  },
+  showPet() {
+    if (this._hiddenDragSuppressTap) return
+    try { wx.setStorageSync(PET_HIDDEN_KEY, false) } catch (error) {}
+    this.setData({ petHidden: false, petDragging: false }, () => this.refreshPetMood())
+  },
+  togglePet() {
+    if (this._petSuppressTap) return
+    if (this.data.petHidden) return this.showPet()
+    this.setData({ petOpen: !this.data.petOpen, dayOpen: false, petError: '' }, () => {
+      this.fitPetToBounds(false)
+      this.refreshPetMood()
+      if (this.data.petOpen) {
+        this._petAutoFollow = true
+        this.measurePetScrollViewport()
+        wx.nextTick(() => this.scrollPetToEnd(true))
+      }
+    })
+  },
+  closePet() {
+    this._bubbleResize = null
+    this.setData({ petOpen: false, bubbleResizing: false }, () => this.refreshPetMood())
+  },
+  inputPet(event) { this.setData({ petInput: event.detail.value.slice(0, 1200), petError: '' }, () => this.refreshPetMood()) },
+  blurPetInput() { this.setData({ petInputFocus: false }) },
+  choosePetQuestion(event) {
+    if (this.data.petBusy) return
+    const question = String(event?.currentTarget?.dataset?.prompt || '').trim()
+    if (!question) return
+    this._petAutoFollow = true
+    this.setData({ petInput: `${question}：`, petInputFocus: true, petError: '' }, () => this.refreshPetMood())
+  },
+  measurePetScrollViewport() {
+    wx.nextTick(() => {
+      this.createSelectorQuery().select('.pet-scroll').boundingClientRect((rect) => {
+        if (rect?.height) this._petScrollViewportHeight = rect.height
+      }).exec()
+    })
+  },
+  startPetScrollTouch() {
+    clearTimeout(this._petScrollTouchTimer)
+    this._petScrollTouching = true
+  },
+  endPetScrollTouch() {
+    clearTimeout(this._petScrollTouchTimer)
+    this._petScrollTouchTimer = setTimeout(() => { this._petScrollTouching = false }, 220)
+  },
+  onPetChatScroll(event) {
+    if (!this._petScrollTouching) return
+    const detail = event?.detail || {}
+    const viewportHeight = this._petScrollViewportHeight || Math.max(80, Number(this.data.bubbleHeight || 0) - 116)
+    const distanceToEnd = Number(detail.scrollHeight || 0) - Number(detail.scrollTop || 0) - viewportHeight
+    if (Number.isFinite(distanceToEnd)) this._petAutoFollow = distanceToEnd < 42
+  },
+  scrollPetToEnd(force = false) {
+    if (!force && this._petAutoFollow === false) return
+    const nextStep = this.data.petScrollTarget === 'pet-chat-end-0' ? 1 : 0
+    this.setData({ petScrollTarget: `pet-chat-end-${nextStep}` })
+  },
+  updatePetStreamMessage(id, content, streaming) {
+    if (this._petDisposed) return
+    const petMessages = this.data.petMessages.map((message) => (
+      message.id === id ? decoratePetMessage({ ...message, content, streaming }) : message
+    ))
+    const update = { petMessages }
+    if (this._petAutoFollow !== false) {
+      const scrollStep = Math.floor(String(content || '').length / 6) % 2
+      update.petScrollTarget = `pet-chat-end-${scrollStep}`
+    }
+    this.setData(update)
+  },
+  currentPetHistoryKey() {
+    return historyKey(app.globalData.user)
+  },
+  decoratePetHistory(messages) {
+    return normalizeMessages(messages, HISTORY_LIMIT).map((message) => decoratePetMessage(message))
+  },
+  latestPetResult(messages) {
+    const latest = [...messages].reverse().find((message) => message.role === 'assistant')
+    return latest ? {
+      questions: latest.questions || [],
+      planDrafts: latest.planDrafts || [],
+      actionDrafts: decorateThemeActions(latest.actionDrafts),
+      sources: latest.sources || [],
+      searchWarning: latest.searchWarning || '',
+      provider: latest.provider || '',
+      model: latest.model || '',
+    } : { questions: [], planDrafts: [], actionDrafts: [] }
+  },
+  restoreLocalPetHistory() {
+    const key = this.currentPetHistoryKey()
+    if (this._petHistoryKey === key && this.data.petMessages.length) return
+    this._petHistoryKey = key
+    const stored = wx.getStorageSync(key)
+    const petMessages = this.decoratePetHistory(stored?.messages || stored || [])
+    if (!petMessages.length) return
+    this.setData({ petMessages, petResult: this.latestPetResult(petMessages) })
+  },
+  persistPetHistory(messages = this.data.petMessages) {
+    const normalized = normalizeMessages(messages, HISTORY_LIMIT)
+    if (!normalized.length) return
+    try {
+      wx.setStorageSync(this.currentPetHistoryKey(), { updatedAt: Date.now(), messages: normalized })
+    } catch (error) {
+      console.warn('宠物聊天本地保存失败', error.errMsg || error)
+    }
+  },
+  async restoreCloudPetHistory() {
+    if (!app.hasSession()) return
+    const key = this.currentPetHistoryKey()
+    if (this._petHistorySyncedFor === key) return
+    this._petHistorySyncedFor = key
+    try {
+      const payload = await api.request(`/api/agent?history=1&limit=${HISTORY_LIMIT}`)
+      const merged = mergeHistories(payload.messages, this.data.petMessages, HISTORY_LIMIT)
+      const petMessages = this.decoratePetHistory(merged)
+      this.setData({ petMessages, petResult: this.latestPetResult(petMessages) })
+      this.persistPetHistory(petMessages)
+    } catch (error) {
+      this._petHistorySyncedFor = ''
+      console.warn('宠物聊天云端恢复失败', error.message || error)
+    }
+  },
+  async sendPet(event) {
+    if (this.data.petBusy) return
+    const prompt = String(event?.currentTarget?.dataset?.prompt || this.data.petInput || '').trim()
+    if (!prompt) return
+    if (!this.requireLogin('AI 宠物聊天')) return
+    const previous = apiPetMessages(this.data.petMessages.slice(-18))
+    const streamId = `assistant-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    const createdAt = new Date().toISOString()
+    const messages = [
+      ...this.data.petMessages,
+      decoratePetMessage({ id: `user-${Date.now()}`, role: 'user', content: prompt, createdAt, streaming: false }),
+      decoratePetMessage({ id: streamId, role: 'assistant', content: '', createdAt, streaming: true }),
+    ].slice(-20)
+    this._petTypewriter.begin(streamId)
+    this._petAutoFollow = true
+    this.setData({
+      petInput: '', petInputFocus: false, petBusy: true, petError: '', petPhase: '正在连接', petCelebrating: false,
+      petMessages: messages, petResult: { questions: [], planDrafts: [], actionDrafts: [] }, petApplied: false,
+    }, () => {
+      this.persistPetHistory(messages)
+      this.refreshPetMood()
+    })
+    try {
+      const request = api.stream('/api/agent', {
+        method: 'POST',
+        data: { message: prompt, messages: previous, calendar: agentCalendarContext(this), stream: true },
+      }, {
+        status: (payload) => this.setData({ petPhase: payload?.message || '正在思考' }),
+        delta: (payload) => this._petTypewriter.push(streamId, payload?.text || ''),
+        reset: (payload) => this._petTypewriter.reset(streamId, payload?.text || ''),
+      })
+      this._petStreamRequest = request
+      const payload = await request
+      await this._petTypewriter.complete(streamId, payload.reply || '我已经看过你的日历了。')
+      const petMessages = this.data.petMessages.map((message) => (
+        message.id === streamId ? decoratePetMessage({
+          ...message,
+          streaming: false,
+          provider: payload.provider || '',
+          model: payload.model || '',
+          status: payload.status || '',
+          questions: payload.questions || [],
+          planDrafts: payload.planDrafts || [],
+          actionDrafts: payload.actionDrafts || [],
+          sources: payload.sources || [],
+          searchWarning: payload.searchWarning || '',
+        }) : message
+      ))
+      this.setData({ petMessages, petResult: { ...payload, actionDrafts: decorateThemeActions(payload.actionDrafts) }, petPhase: '整理完成' }, () => {
+        this.persistPetHistory(petMessages)
+        this.measurePetScrollViewport()
+        wx.nextTick(() => this.scrollPetToEnd(true))
+      })
+      if (payload.planDrafts?.length) this.celebratePet()
+    } catch (error) {
+      this._petTypewriter.cancel(streamId)
+      const petMessages = this.data.petMessages.map((message) => (
+        message.id === streamId ? decoratePetMessage({ ...message, streaming: false }) : message
+      )).filter((message) => message.id !== streamId || message.content)
+      this.setData({ petMessages, petError: error.message || '小Y 暂时没有回应，请稍后重试' }, () => this.persistPetHistory(petMessages))
+    } finally {
+      this._petStreamRequest = null
+      this.setData({ petBusy: false, petPhase: '待命' }, () => this.refreshPetMood())
+    }
+  },
+  applyPetPlans() {
+    const drafts = this.data.petResult?.planDrafts || []
+    if (!drafts.length || this.data.petApplied) return
+    const createdAt = new Date().toISOString()
+    const plans = drafts.map((draft, index) => ({
+      id: `${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`, title: draft.title, goal: draft.goal || '', dailyTask: draft.dailyTask || draft.title,
+      start: draft.start, end: draft.end, weekdays: Array.isArray(draft.weekdays) ? draft.weekdays : [1, 2, 3, 4, 5],
+      type: draft.type === 'work' ? 'work' : 'study', planType: draft.type === 'work' ? 'work' : 'study', createdAt,
+    }))
+    app.updateSnapshot((snapshot) => ({ ...snapshot, plans: [...snapshot.plans, ...plans] }))
+    this.setData({ petApplied: true }); this.celebratePet(); this.refreshView(); wx.showToast({ title: '已写入规划中心', icon: 'success' })
+  },
+  applyPetThemeAction(event) {
+    const actionId = String(event?.currentTarget?.dataset?.id || '')
+    const actions = this.data.petResult?.actionDrafts || []
+    const action = actions.find((item) => item.id === actionId)
+    if (!action || action.applied) return
+    const snapshot = app.globalData.snapshot
+    if (action.kind === 'open_theme_settings') {
+      wx.navigateTo({ url: '/pages/theme/theme' })
+    } else if (action.kind === 'toggle_theme') {
+      app.updateSnapshot((current) => ({ ...current, theme: current.theme === 'berry-night' ? 'light' : 'berry-night', skin: { ...current.skin, enabled: false } }))
+    } else if (action.kind === 'set_theme') {
+      app.updateSnapshot((current) => ({ ...current, theme: action.theme === 'berry-night' ? 'berry-night' : 'light', skin: { ...current.skin, enabled: false } }))
+    } else if (action.kind === 'set_font_theme') {
+      app.updateSnapshot((current) => ({ ...current, fontTheme: action.fontTheme === 'system' ? 'system' : 'cloud' }))
+    } else if (action.kind === 'set_surface_opacity') {
+      const surfaceOpacity = Math.round(Math.max(45, Math.min(100, Number(action.surfaceOpacity) || snapshot.surfaceOpacity || 88)))
+      app.updateSnapshot((current) => ({ ...current, surfaceOpacity }))
+    } else return
+    this.setData({
+      'petResult.actionDrafts': actions.map((item) => item.id === actionId ? { ...item, applied: true } : item),
+    })
+    wx.showToast({ title: action.kind === 'open_theme_settings' ? '已打开主题设置' : '主题已更新', icon: 'none' })
+  },
+})

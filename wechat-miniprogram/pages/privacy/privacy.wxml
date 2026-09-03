@@ -1,0 +1,22 @@
+<view class="page-shell privacy-page theme-{{theme}} {{fontClass}} {{skinClass}}" style="{{skinStyle}}">
+  <view class="privacy-card card">
+    <text class="privacy-title">小Y日历隐私保护说明</text>
+    <text class="updated">更新日期：2026年9月1日</text>
+    <view class="privacy-section">
+      <text>我们会处理什么</text>
+      <text class="privacy-copy">为提供账号登录、日历记录、便签、规划及多端同步功能，会处理昵称、加密后的密码凭据、日历与规划数据、必要的登录与安全日志。</text>
+    </view>
+    <view class="privacy-section">
+      <text>图片皮肤如何使用</text>
+      <text class="privacy-copy">只有在你主动选择“上传并智能适配”时，小程序才会调用微信的图片选择或拍摄能力。选中的图片会压缩后上传，用于账号专属皮肤和智能取景；不会读取未选择的照片。</text>
+    </view>
+    <view class="privacy-section">
+      <text>网络与安全信息</text>
+      <text class="privacy-copy">服务器可能基于网络请求记录 IP、设备类型、访问时间及由 IP 粗略推断的城市信息，用于账号安全、异常排查和反滥用，不用于持续定位或广告画像。</text>
+    </view>
+    <view class="privacy-section">
+      <text>数据保存与删除</text>
+      <text class="privacy-copy">数据存储于小Y日历的 Cloudflare 服务。需要更正或删除账号与数据时，请通过小程序主体在微信平台公示的联系方式联系我们。</text>
+    </view>
+  </view>
+</view>

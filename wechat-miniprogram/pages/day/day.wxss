@@ -1,0 +1,156 @@
+.day-page {
+  padding-bottom: 60rpx;
+}
+
+.date-card,
+.section-card {
+  padding: 32rpx;
+}
+
+.date-title,
+.section-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.date-subtitle {
+  display: block;
+  margin-top: 10rpx;
+  color: #8fa3b6;
+  font-size: 24rpx;
+}
+
+.section-card {
+  margin-top: 24rpx;
+}
+
+.status-row {
+  margin-top: 24rpx;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12rpx;
+}
+
+.status-button {
+  box-sizing: border-box;
+  min-height: 76rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22rpx;
+  background: #f2f6f9;
+  color: #6c8296;
+  font-size: 25rpx;
+  font-weight: 700;
+}
+
+.status-button.active {
+  color: #fff;
+}
+
+.status-button.active.work { background: #428fd6; }
+.status-button.active.rest { background: #2bc099; }
+.status-button.active.leave { background: #efb33d; }
+
+.duration-field {
+  margin-top: 26rpx;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+}
+
+.section-heading view {
+  display: flex;
+  align-items: baseline;
+  gap: 14rpx;
+}
+
+.section-count {
+  color: #8fa3b6;
+  font-size: 22rpx;
+}
+
+.note-compose {
+  margin-top: 24rpx;
+  display: grid;
+  grid-template-columns: 1fr 126rpx;
+  gap: 12rpx;
+}
+
+.note-compose .primary-button {
+  min-height: 88rpx;
+}
+
+.note-list,
+.task-list {
+  margin-top: 22rpx;
+}
+
+.note-item {
+  padding: 20rpx 0;
+  display: grid;
+  grid-template-columns: 52rpx 1fr 72rpx;
+  gap: 14rpx;
+  align-items: center;
+  border-bottom: 2rpx solid #edf2f5;
+}
+
+.note-item.done > text {
+  color: #9aabb9;
+  text-decoration: line-through;
+}
+
+.note-check,
+.task-check {
+  width: 48rpx;
+  height: 48rpx;
+  padding: 0;
+  border: 3rpx solid #2bc099;
+  border-radius: 16rpx;
+  background: #fff;
+  color: #2bc099;
+  line-height: 44rpx;
+}
+
+.note-delete {
+  padding: 0;
+  background: transparent;
+  color: #e66c5f;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+.task-item {
+  width: 100%;
+  padding: 20rpx 0;
+  display: grid;
+  grid-template-columns: 52rpx 1fr;
+  gap: 16rpx;
+  align-items: center;
+  background: transparent;
+  color: #153454;
+  text-align: left;
+}
+
+.task-item.done view > text {
+  color: #91a4b6;
+  text-decoration: line-through;
+}
+
+.task-item view {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-plan-title {
+  margin-top: 4rpx;
+  color: #91a4b6;
+  font-size: 21rpx;
+}
+
+.open-plans {
+  margin-top: 20rpx;
+}

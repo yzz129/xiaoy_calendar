@@ -1,0 +1,151 @@
+.plans-page {
+  padding-bottom: 60rpx;
+}
+
+.intro-card,
+.create-card,
+.plan-card {
+  padding: 32rpx;
+}
+
+.intro-card > text,
+.section-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.intro-copy {
+  display: block;
+  margin-top: 10rpx;
+  color: #8fa3b6;
+  font-size: 24rpx;
+}
+
+.create-card {
+  margin-top: 24rpx;
+}
+.type-row { margin-top: 22rpx; display: grid; grid-template-columns: 1fr 1fr; gap: 12rpx; }
+.type-row view { min-height: 70rpx; display: flex; align-items: center; justify-content: center; gap: 9rpx; border: 2rpx solid var(--line); border-radius: 20rpx; color: var(--muted); font-weight: 900; }
+.type-row view.active { border-color: var(--mint); background: var(--mint-soft); color: var(--ink); box-shadow: 3rpx 4rpx 0 var(--mint); }
+.type-row image { width: 28rpx; height: 28rpx; }
+
+.date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+}
+
+.picker-value {
+  box-sizing: border-box;
+  min-height: 88rpx;
+  padding: 0 22rpx;
+  display: flex;
+  align-items: center;
+  border: 2rpx solid #dbe7ef;
+  border-radius: 24rpx;
+  background: #fff;
+  font-size: 25rpx;
+}
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8rpx;
+}
+
+.weekday-button {
+  width: 100%;
+  min-height: 64rpx;
+  padding: 0;
+  border-radius: 18rpx;
+  background: #edf4f8;
+  color: #7890a4;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weekday-button.active {
+  background: #2bc099;
+  color: #fff;
+}
+
+.create-button {
+  margin-top: 30rpx;
+}
+.create-button.disabled { opacity: .45; box-shadow: none; }
+
+.plan-list {
+  margin-top: 24rpx;
+}
+
+.plan-card + .plan-card {
+  margin-top: 20rpx;
+}
+
+.plan-head,
+.plan-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plan-head view {
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-head view > text {
+  font-size: 31rpx;
+  font-weight: 900;
+}
+
+.plan-range {
+  margin-top: 6rpx;
+  color: #91a4b6;
+  font-size: 21rpx;
+}
+
+.plan-type {
+  padding: 8rpx 16rpx;
+  border-radius: 16rpx;
+  background: #edf7ff;
+  color: #428fd6;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.daily-task {
+  margin-top: 24rpx;
+  color: #587087;
+  font-size: 25rpx;
+}
+
+.progress {
+  height: 14rpx;
+  margin-top: 20rpx;
+  overflow: hidden;
+  border-radius: 8rpx;
+  background: #edf2f5;
+}
+
+.progress view {
+  height: 100%;
+  border-radius: inherit;
+  background: #2bc099;
+}
+
+.plan-foot {
+  margin-top: 14rpx;
+  color: #8fa3b6;
+  font-size: 22rpx;
+}
+
+.plan-foot view {
+  padding: 8rpx 0;
+  background: transparent;
+  color: #e66c5f;
+  font-size: 22rpx;
+}
