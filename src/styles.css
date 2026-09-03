@@ -24,6 +24,7 @@
   text-rendering: auto;
 }
 
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 * { box-sizing: border-box; }
 body { min-width: 320px; min-height: 100vh; margin: 0; }
 button, input, textarea, select, option { font: inherit; }
@@ -1948,13 +1949,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 }
 
 @media (max-width: 760px) {
+  html, body, #root { height: 100%; overflow: hidden; }
   html, body { scrollbar-width: none; -ms-overflow-style: none; }
   html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
-  .app { min-height: 100dvh; display: flex; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
-  .app-frame { min-height: 0; display: flex; flex: 1; flex-direction: column; }
+  .app { height: 100vh; height: 100dvh; min-height: 100%; display: flex; overflow-x: hidden; overflow-y: auto; padding-bottom: calc(14px + env(safe-area-inset-bottom)); overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
+  .app-frame { min-height: 100%; display: flex; flex: 1; flex-direction: column; }
   .workspace { min-height: 0; display: flex; flex: 1; flex-direction: column; }
-  .calendar-shell { min-height: 340px; display: grid; flex: 1; grid-template-rows: 34px minmax(306px, 1fr); }
-  .calendar-grid { min-height: 306px; }
+  .calendar-shell { min-height: clamp(292px, calc(100dvh - 420px), 420px); display: grid; flex: 1 1 auto; grid-template-rows: 34px minmax(258px, 1fr); }
+  .calendar-grid { min-height: 258px; grid-template-rows: repeat(6, minmax(43px, 1fr)); }
+  .calendar-cell { min-height: 43px; }
   .app-header { grid-template-columns: minmax(0, 1fr); gap: 10px; position: relative; }
   .app-header .brand { grid-column: 1; grid-row: 1; min-width: 0; }
   .app-header .brand > span { white-space: nowrap; }
