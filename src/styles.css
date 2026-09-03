@@ -86,16 +86,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
 
 .app.has-custom-skin { position: relative; background-image: none; }
 .app.has-custom-skin::before {
-  content: '';
-  position: fixed;
-  z-index: 0;
-  inset: -28px;
-  background-image: var(--skin-image);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  filter: blur(20px) saturate(.92);
-  transform: scale(1.035) translateZ(0);
+  content: none;
 }
 .app.has-custom-skin::after {
   content: '';
@@ -106,7 +97,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgb(87 169 232 / 
   background-image: linear-gradient(var(--skin-overlay-top, rgba(255, 255, 255, .16)), var(--skin-overlay-bottom, rgba(247, 253, 251, .24))), var(--skin-image);
   background-position: center, var(--skin-position, 50% 45%);
   background-repeat: no-repeat;
-  background-size: cover, contain;
+  background-size: cover, cover;
 }
 .app.has-custom-skin[data-theme='berry-night']::after {
   background-image: linear-gradient(var(--skin-overlay-top, rgba(8, 25, 42, .22)), var(--skin-overlay-bottom, rgba(14, 34, 57, .34))), var(--skin-image);
