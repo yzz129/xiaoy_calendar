@@ -26,10 +26,13 @@ export async function onRequestGet({ request, env, params }) {
   const auth = await requireAdmin(request, env)
   if (auth.response) return auth.response
   const id = String(params.id || '')
-  const [user, snapshot, chats, calls, activities, usage, providers, actionBreakdown, sessions] = await Promise.all([
+  const [user, snapshot, themeOriginal, themeUploadHistory, chats, calls, activities, usage, providers, actionBreakdown, sessions] = await Promise.all([
     env.DB.prepare(`SELECT id, nickname, role, status, created_at, updated_at, last_login_at
       FROM users WHERE id = ?`).bind(id).first(),
     env.DB.prepare('SELECT data_json, updated_at FROM user_snapshots WHERE user_id = ?').bind(id).first(),
+    env.DB.prepare('SELECT content_type, filename, byte_size, updated_at FROM user_theme_originals WHERE user_id = ?').bind(id).first(),
+    env.DB.prepare(`SELECT COUNT(*) AS upload_count, MAX(created_at) AS last_uploaded_at
+      FROM activity_logs WHERE user_id = ? AND action = 'theme_original_upload'`).bind(id).first(),
     env.DB.prepare(`SELECT id, role, content, provider, model, meta_json, created_at
       FROM chat_messages WHERE user_id = ? ORDER BY created_at DESC LIMIT 200`).bind(id).all(),
     env.DB.prepare(`SELECT id, provider, model, request_preview, response_preview, status, latency_ms, error, created_at
@@ -71,6 +74,19 @@ export async function onRequestGet({ request, env, params }) {
     user,
     snapshot: snapshotData,
     snapshotUpdatedAt: snapshot?.updated_at || null,
+    themeOriginal: themeOriginal ? {
+      available: true,
+      contentType: themeOriginal.content_type,
+      filename: themeOriginal.filename,
+      byteSize: Number(themeOriginal.byte_size || 0),
+      updatedAt: themeOriginal.updated_at,
+      uploadCount: Number(themeUploadHistory?.upload_count || 0),
+      url: `/api/admin/theme-original/${encodeURIComponent(id)}`,
+    } : {
+      available: false,
+      uploadCount: Number(themeUploadHistory?.upload_count || 0),
+      updatedAt: themeUploadHistory?.last_uploaded_at || null,
+    },
     chats: chats.results || [],
     modelCalls: calls.results || [],
     activities: activities.results || [],

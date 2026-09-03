@@ -10,6 +10,7 @@ import {
   Clock3,
   Database,
   Gauge,
+  Image as ImageIcon,
   KeyRound,
   Laptop,
   LogIn,
@@ -29,6 +30,7 @@ import Logo from './Logo'
 
 const TABS = [
   ['overview', '用户概览', CircleUserRound],
+  ['wallpaper', '用户壁纸', ImageIcon],
   ['plans', '规划', CalendarDays],
   ['usage', '使用情况', Gauge],
   ['chats', '聊天记录', MessageCircle],
@@ -56,6 +58,9 @@ const ACTION_LABELS = {
   admin_user_created: '管理员创建用户',
   admin_user_updated: '管理员修改用户',
   admin_user_deleted: '管理员删除用户',
+  theme_skin_upload: '上传主题皮肤',
+  theme_original_upload: '归档壁纸原图',
+  theme_skin_delete: '删除主题皮肤',
 }
 
 function localTime(value) {
@@ -71,6 +76,44 @@ function displayValue(value) {
   if (value == null) return '—'
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)
+}
+
+function formatBytes(value) {
+  const bytes = Number(value || 0)
+  if (!bytes) return '0 KB'
+  if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`
+}
+
+function AdminThemeOriginal({ asset }) {
+  const [src, setSrc] = useState('')
+  const [imageError, setImageError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    let objectUrl = ''
+    setSrc('')
+    setImageError('')
+    if (!asset?.available || !asset.url) return () => { active = false }
+    authFetch(asset.url).then(async (response) => {
+      if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || '原图读取失败')
+      objectUrl = URL.createObjectURL(await response.blob())
+      if (active) setSrc(objectUrl)
+      else URL.revokeObjectURL(objectUrl)
+    }).catch((error) => { if (active) setImageError(error.message || '原图读取失败') })
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [asset?.available, asset?.url, asset?.updatedAt])
+
+  return <div className="admin-wallpaper-card">
+    <div className="admin-section-title"><ImageIcon /><span><strong>用户壁纸原图</strong><small>{asset?.available ? `上传于 ${localTime(asset.updatedAt)}` : asset?.uploadCount ? `检测到 ${asset.uploadCount} 次历史上传` : '该用户尚未上传'}</small></span>{src ? <a className="admin-wallpaper-open" href={src} target="_blank" rel="noreferrer">查看原图</a> : null}</div>
+    {asset?.available ? <>
+      {src ? <a className="admin-wallpaper-preview" href={src} target="_blank" rel="noreferrer" title="点击查看原图"><img src={src} alt={`${asset.filename || '用户壁纸'}原图`} /></a> : <div className="admin-wallpaper-loading">{imageError || '正在读取原图…'}</div>}
+      <div className="admin-wallpaper-meta"><strong>{asset.filename || 'wallpaper'}</strong><small>{formatBytes(asset.byteSize)} · {asset.contentType || '图片'}</small></div>
+    </> : asset?.uploadCount ? <p className="admin-inline-empty admin-wallpaper-warning">旧版本在删除自定义皮肤时同时删除了原图，现已修复。该图片无法从服务器恢复；用户重新上传一次后，原图会永久保留在后台。</p> : <p className="admin-inline-empty">用户上传自定义壁纸后，原图会在这里显示。</p>}
+  </div>
 }
 
 function requestLocationLabel(value) {
@@ -234,8 +277,9 @@ export default function AdminApp({ currentUser, onLogout }) {
             <div className="admin-tab-body">
               {tab === 'overview' ? <div className="admin-overview">
                 <form className="admin-edit-card" onSubmit={saveUser}><div className="admin-section-title"><Pencil /><span><strong>账号资料</strong><small>修改昵称、权限、状态或重置密码</small></span></div><div className="admin-form-grid"><label><span>昵称</span><input value={editForm?.nickname || ''} onChange={(event) => setEditForm({ ...editForm, nickname: event.target.value })} /></label><label><span>角色</span><select value={editForm?.role || 'user'} onChange={(event) => setEditForm({ ...editForm, role: event.target.value })}><option value="user">普通用户</option><option value="admin">管理员</option></select></label><label><span>状态</span><select value={editForm?.status || 'active'} onChange={(event) => setEditForm({ ...editForm, status: event.target.value })}><option value="active">正常</option><option value="disabled">停用</option></select></label><label><span>新密码（不修改请留空）</span><input type="password" value={editForm?.password || ''} onChange={(event) => setEditForm({ ...editForm, password: event.target.value })} /></label></div><button className="admin-primary"><KeyRound />保存修改</button></form>
-                <div className="admin-overview-side"><div className="admin-data-card"><div className="admin-section-title"><Database /><span><strong>用户数据概览</strong><small>最近同步 {localTime(detail.snapshotUpdatedAt)}</small></span></div><div className="admin-data-grid"><span><strong>{plans.length}</strong><small>规划</small></span><span><strong>{Object.keys(entries).length}</strong><small>日期记录</small></span><span><strong>{noteCount}</strong><small>便签</small></span><span><strong>{usage.chat_count || 0}</strong><small>聊天消息</small></span></div></div><div className="admin-account-facts"><span><small>用户 ID</small><strong>{detail.user.id}</strong></span><span><small>账号角色</small><strong>{detail.user.role === 'admin' ? '管理员' : '普通用户'}</strong></span><span><small>账号创建</small><strong>{localTime(detail.user.created_at)}</strong></span><span><small>最近更新</small><strong>{localTime(detail.user.updated_at)}</strong></span></div></div>
+                <div className="admin-overview-side"><div className="admin-data-card"><div className="admin-section-title"><Database /><span><strong>用户数据概览</strong><small>最近同步 {localTime(detail.snapshotUpdatedAt)}</small></span></div><div className="admin-data-grid"><span><strong>{plans.length}</strong><small>规划</small></span><span><strong>{Object.keys(entries).length}</strong><small>日期记录</small></span><span><strong>{noteCount}</strong><small>便签</small></span><span><strong>{usage.chat_count || 0}</strong><small>聊天消息</small></span></div></div><AdminThemeOriginal asset={detail.themeOriginal} /><div className="admin-account-facts"><span><small>用户 ID</small><strong>{detail.user.id}</strong></span><span><small>账号角色</small><strong>{detail.user.role === 'admin' ? '管理员' : '普通用户'}</strong></span><span><small>账号创建</small><strong>{localTime(detail.user.created_at)}</strong></span><span><small>最近更新</small><strong>{localTime(detail.user.updated_at)}</strong></span></div></div>
               </div> : null}
+              {tab === 'wallpaper' ? <div className="admin-wallpaper-page"><AdminThemeOriginal asset={detail.themeOriginal} /></div> : null}
               {tab === 'plans' ? <div className="admin-record-list">{plans.length ? plans.map((plan) => <article key={plan.id || plan.title}><span className={`record-icon ${plan.type === 'work' ? 'work' : ''}`}><CalendarDays /></span><div><strong>{plan.title || '未命名规划'}</strong><p>{plan.goal || plan.dailyTask || '暂无目标说明'}</p><small>{plan.start || '—'} 至 {plan.end || '—'} · {plan.type === 'work' ? '工作规划' : '学习规划'}</small></div></article>) : <p className="admin-empty">该用户暂无规划</p>}</div> : null}
               {tab === 'usage' ? <div className="admin-usage"><div className="admin-usage-grid"><article><LogIn /><span><small>累计登录</small><strong>{usage.login_count || 0} 次</strong></span></article><article><Laptop /><span><small>登录会话</small><strong>{usage.session_count || 0} 个</strong></span></article><article><Database /><span><small>数据同步</small><strong>{usage.sync_count || 0} 次</strong></span></article><article><Bot /><span><small>AI 成功率</small><strong>{successRate}%</strong></span></article><article><Clock3 /><span><small>平均响应</small><strong>{usage.average_latency_ms || 0} ms</strong></span></article><article><Activity /><span><small>行为记录</small><strong>{usage.activity_count || 0} 条</strong></span></article></div><section className="admin-usage-section"><div className="admin-section-title"><Bot /><span><strong>模型与提供商使用分布</strong><small>按模型、状态和调用量统计</small></span></div>{usage.providers?.length ? <div className="admin-breakdown">{usage.providers.map((item) => <article key={`${item.provider}-${item.model}-${item.status}`}><span><strong>{item.provider}</strong><small>{item.model}</small></span><span><b>{item.count}</b><small>{item.status === 'success' ? '成功' : '失败'} · 平均 {item.average_latency_ms || 0}ms</small></span></article>)}</div> : <p className="admin-inline-empty">暂无 AI 使用数据</p>}</section><section className="admin-usage-section"><div className="admin-section-title"><Activity /><span><strong>行为分布</strong><small>展示该用户主要使用动作</small></span></div>{usage.actionBreakdown?.length ? <div className="admin-action-breakdown">{usage.actionBreakdown.map((item) => <span key={item.action}><strong>{ACTION_LABELS[item.action] || item.action}</strong><i>{item.count}</i><small>{localTime(item.last_used_at)}</small></span>)}</div> : <p className="admin-inline-empty">暂无用户行为</p>}</section><section className="admin-usage-section"><div className="admin-section-title"><Laptop /><span><strong>登录设备与会话</strong><small>仅展示最近 50 个会话，不包含令牌</small></span></div>{usage.sessions?.length ? <div className="admin-session-list">{usage.sessions.map((session, index) => <article key={`${session.created_at}-${index}`}><Laptop /><span><strong>{session.user_agent || '未知设备'}</strong><small className="admin-meta-line">创建 {localTime(session.created_at)} · 最后活动 {localTime(session.last_seen_at)} · 城市：{requestLocationLabel(session.location)}</small>{session.ip || session.user_agent ? <small className="admin-meta-line admin-technical">{session.ip ? `IP ${session.ip}` : ''}{session.ip && session.user_agent ? ' · ' : ''}{session.user_agent || ''}</small> : null}</span><em className={new Date(session.expires_at).getTime() > Date.now() ? 'active' : ''}>{new Date(session.expires_at).getTime() > Date.now() ? '有效' : '过期'}</em></article>)}</div> : <p className="admin-inline-empty">暂无会话记录</p>}</section></div> : null}
               {tab === 'chats' ? <div className="admin-record-list">{detail.chats.length ? detail.chats.map((chat) => <article key={chat.id}><span className={`record-icon ${chat.role}`}><MessageCircle /></span><div><strong>{chat.role === 'user' ? '用户' : '小Y Agent'}</strong><p>{chat.content}</p><small>{localTime(chat.created_at)}{chat.provider ? ` · ${chat.provider} / ${chat.model}` : ''}</small></div></article>) : <p className="admin-empty">暂无聊天记录</p>}</div> : null}

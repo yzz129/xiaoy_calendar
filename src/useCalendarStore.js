@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { authFetch } from './auth'
 import { getDateKeysInRange } from './date-utils'
+import { DEFAULT_SURFACE_OPACITY, normalizeSurfaceOpacity } from './theme-settings'
+import { normalizeAdaptivePalette } from './theme-palette'
 const STORAGE_KEY = 'xiaoy-calendar:v3'
 const PREVIOUS_STORAGE_KEY = 'xiaoy-calendar:v2'
 const LEGACY_STORAGE_KEY = 'berry-calendar:v1'
 const LEGACY_OWNER_KEY = 'xiaoy-calendar:legacy-owner:v1'
 const PLAN_TYPE_DATA_VERSION = 1
+const DEFAULT_SKIN = { enabled: false, revision: '', focusX: .5, focusY: .45, palette: null }
 const initialState = {
   entries: {},
   notes: {},
@@ -14,6 +17,9 @@ const initialState = {
   planTaskOverrides: {},
   planTypeDataVersion: PLAN_TYPE_DATA_VERSION,
   theme: 'light',
+  fontTheme: 'cloud',
+  surfaceOpacity: DEFAULT_SURFACE_OPACITY,
+  skin: DEFAULT_SKIN,
 }
 
 function isPlanType(value) {
@@ -32,6 +38,7 @@ function normalizePlan(plan, resetLegacyType = false) {
 
 function normalizeState(parsed) {
   const resetLegacyPlanType = parsed.planTypeDataVersion !== PLAN_TYPE_DATA_VERSION
+  const skin = parsed.skin && typeof parsed.skin === 'object' ? parsed.skin : DEFAULT_SKIN
   return {
     ...initialState,
     ...parsed,
@@ -44,6 +51,16 @@ function normalizeState(parsed) {
     planTaskOverrides: parsed.planTaskOverrides && typeof parsed.planTaskOverrides === 'object'
       ? parsed.planTaskOverrides
       : {},
+    theme: parsed.theme === 'berry-night' ? 'berry-night' : 'light',
+    fontTheme: parsed.fontTheme === 'system' ? 'system' : 'cloud',
+    surfaceOpacity: normalizeSurfaceOpacity(parsed.surfaceOpacity),
+    skin: {
+      enabled: Boolean(skin.enabled && skin.revision),
+      revision: String(skin.revision || '').slice(0, 40),
+      focusX: Math.max(0, Math.min(1, Number.isFinite(Number(skin.focusX)) ? Number(skin.focusX) : .5)),
+      focusY: Math.max(0, Math.min(1, Number.isFinite(Number(skin.focusY)) ? Number(skin.focusY) : .45)),
+      palette: normalizeAdaptivePalette(skin.palette),
+    },
     planTypeDataVersion: PLAN_TYPE_DATA_VERSION,
   }
 }
@@ -494,6 +511,10 @@ export function useCalendarStore(userId) {
     setStore((current) => ({ ...current, theme: current.theme === 'light' ? 'berry-night' : 'light' }))
   }
 
+  const updateThemeSettings = (settings) => {
+    setStore((current) => normalizeState({ ...current, ...settings }))
+  }
+
   return {
     store,
     updateEntry,
@@ -514,5 +535,6 @@ export function useCalendarStore(userId) {
     resetPlanTask,
     movePlanTask,
     toggleTheme,
+    updateThemeSettings,
   }
 }

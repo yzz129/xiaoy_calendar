@@ -2,8 +2,11 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $keystorePath = Join-Path $repoRoot 'release\xiaoy-calendar-release.jks'
-$apkOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.5-store.apk'
-$aabOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.5-store.aab'
+$apkOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.9-store.apk'
+$aabOutput = Join-Path $repoRoot 'release\xiaoy-calendar-1.9-store.aab'
+$shortBuildTemp = 'C:\jtmp'
+$previousTemp = $env:TEMP
+$previousTmp = $env:TMP
 
 if (-not (Test-Path -LiteralPath $keystorePath)) {
     throw "Signing keystore was not found: $keystorePath"
@@ -13,6 +16,12 @@ $passwordPointer = [IntPtr]::Zero
 $plainPassword = $null
 
 try {
+    if (-not (Test-Path -LiteralPath $shortBuildTemp)) {
+        New-Item -ItemType Directory -Path $shortBuildTemp | Out-Null
+    }
+    $env:TEMP = $shortBuildTemp
+    $env:TMP = $shortBuildTemp
+
     for ($attempt = 1; $attempt -le 3; $attempt++) {
         $securePassword = Read-Host 'Enter the signing password (input is hidden)' -AsSecureString
         $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
@@ -102,4 +111,6 @@ finally {
     Remove-Item Env:XIAOY_STORE_PASSWORD -ErrorAction SilentlyContinue
     Remove-Item Env:XIAOY_KEY_ALIAS -ErrorAction SilentlyContinue
     Remove-Item Env:XIAOY_KEY_PASSWORD -ErrorAction SilentlyContinue
+    $env:TEMP = $previousTemp
+    $env:TMP = $previousTmp
 }

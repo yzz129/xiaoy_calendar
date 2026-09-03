@@ -7,6 +7,7 @@ import {
   readJson,
   requestOrigin,
 } from '../../server/auth.js'
+import { normalizeAdaptivePalette } from '../../src/theme-palette.js'
 
 const EMPTY_SNAPSHOT = {
   entries: {},
@@ -15,6 +16,9 @@ const EMPTY_SNAPSHOT = {
   planProgress: {},
   planTaskOverrides: {},
   theme: 'light',
+  fontTheme: 'cloud',
+  surfaceOpacity: 88,
+  skin: { enabled: false, revision: '', focusX: 0.5, focusY: 0.45, palette: null },
   planTypeDataVersion: 1,
 }
 
@@ -23,6 +27,7 @@ function objectOrEmpty(value) {
 }
 
 function cleanSnapshot(value) {
+  const skin = objectOrEmpty(value?.skin)
   return {
     ...EMPTY_SNAPSHOT,
     entries: objectOrEmpty(value?.entries),
@@ -31,6 +36,15 @@ function cleanSnapshot(value) {
     planProgress: objectOrEmpty(value?.planProgress),
     planTaskOverrides: objectOrEmpty(value?.planTaskOverrides),
     theme: value?.theme === 'berry-night' ? 'berry-night' : 'light',
+    fontTheme: value?.fontTheme === 'system' ? 'system' : 'cloud',
+    surfaceOpacity: Math.round(Math.max(45, Math.min(100, Number.isFinite(Number(value?.surfaceOpacity)) ? Number(value.surfaceOpacity) : 88))),
+    skin: {
+      enabled: Boolean(skin.enabled && skin.revision),
+      revision: String(skin.revision || '').replace(/[^\w.-]/g, '').slice(0, 40),
+      focusX: Math.max(0, Math.min(1, Number.isFinite(Number(skin.focusX)) ? Number(skin.focusX) : 0.5)),
+      focusY: Math.max(0, Math.min(1, Number.isFinite(Number(skin.focusY)) ? Number(skin.focusY) : 0.45)),
+      palette: normalizeAdaptivePalette(skin.palette),
+    },
     planTypeDataVersion: 1,
   }
 }

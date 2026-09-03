@@ -1,8 +1,8 @@
-import { ChevronLeft, ChevronRight, ClipboardList, Download, LogOut, MoonStar, ShieldCheck, Sun, UserRound } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ClipboardList, Download, LogOut, Palette, ShieldCheck, UserRound } from 'lucide-react'
 import { APK_DOWNLOAD_PAGE_URL, isNativeApp } from '../app-links'
 import Logo from './Logo'
 
-export default function AppHeader({ month, onPrevious, onNext, onToday, onPlans, activePlanCount, theme, onTheme, user, onProfile, onLogout }) {
+export default function AppHeader({ month, onPrevious, onNext, onToday, onPlans, activePlanCount, onTheme, user, onProfile, onLogout }) {
   return (
     <header className={`app-header ${user.role === 'admin' ? 'is-admin' : ''}`}>
       <Logo />
@@ -16,8 +16,8 @@ export default function AppHeader({ month, onPrevious, onNext, onToday, onPlans,
         <button className="plan-button" onClick={onPlans} aria-label={`打开规划中心，${activePlanCount}个进行中规划`}>
           <ClipboardList /><span>规划中心</span>{activePlanCount ? <i>{activePlanCount > 9 ? '9+' : activePlanCount}</i> : null}
         </button>
-        <button className="icon-button" onClick={onTheme} aria-label="切换主题">
-          {theme === 'light' ? <MoonStar /> : <Sun />}
+        <button className="icon-button theme-button" onClick={onTheme} aria-label="打开主题设置" title="主题设置">
+          <Palette /><span>主题</span>
         </button>
         {!isNativeApp() ? <a className="download-app-button" href={APK_DOWNLOAD_PAGE_URL} aria-label="进入小Y日历 Android APP 下载页" title="下载 Android APP"><Download /><span>下载APP</span></a> : null}
         {user.role === 'admin' ? <a className="admin-link-button" href="/admin/" aria-label="进入管理员后台"><ShieldCheck /></a> : null}

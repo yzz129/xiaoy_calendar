@@ -3,9 +3,20 @@
 一个把日历、工期统计、便签、学习/工作规划和 AI 助手放在一起的可爱效率应用。支持网页、PWA 与 Android，登录后以云端数据为主进行多端同步，同时保留基础日历的本地可用能力。
 
 [![在线使用](https://img.shields.io/badge/在线使用-calendar.yzzwnw.asia-2fc49f?style=for-the-badge)](https://calendar.yzzwnw.asia/)
-[![下载 APK](https://img.shields.io/badge/下载-Android_APK-ff7c70?style=for-the-badge&logo=android&logoColor=white)](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-latest.apk)
+[![下载 APK](https://img.shields.io/badge/下载-Android_APK-ff7c70?style=for-the-badge&logo=android&logoColor=white)](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-1.9-109004.apk)
 
-> 当前 Android 版本：**1.5**（versionCode 6），支持 Android 7.0 及以上系统。
+> 当前 Android 版本：**1.9**（versionCode 109004），支持 Android 7.0 及以上系统。
+
+## 1.9 更新内容
+
+- 新增主题设置中心，可在云朵体与跟随系统字体之间切换
+- 支持前景内容透明度调节，背景壁纸保持独立显示
+- 支持上传 JPG、PNG、WebP 壁纸，通过图像分析自动选择主体区域、适配横竖屏并提取界面配色
+- 字体、透明度、内置主题、自定义壁纸和自适应配色随账号同步
+- 小Y Agent 可以识别主题修改意图，并在用户确认后执行字体、皮肤和透明度操作
+- 管理员后台新增“用户壁纸”，可查看用户上传的原图、文件格式、大小和上传时间
+- 删除用户当前自定义皮肤时保留后台原图档案，避免审计记录丢失
+- Android 版本升级为 1.9 / versionCode 109004，可可靠覆盖较早的正式签名版本
 
 ## 最新界面
 
@@ -17,10 +28,10 @@
 ## 下载与体验
 
 - 在线版：[https://calendar.yzzwnw.asia/](https://calendar.yzzwnw.asia/)
-- Android APK：[从小Y日历官网下载最新版](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-latest.apk)
+- Android APK：[从小Y日历官网下载最新版](https://calendar.yzzwnw.asia/downloads/xiaoy-calendar-1.9-109004.apk)
 - 管理员入口：[https://calendar.yzzwnw.asia/admin/](https://calendar.yzzwnw.asia/admin/)
 
-正式签名的 1.5 APK 可以直接覆盖正式版 1.4，账号、本地日历记录和应用数据会保留。若手机安装的是早期 Debug 包或其他签名版本，Android 会因签名不同而拒绝覆盖，需要先备份数据并卸载旧包。
+正式签名的 1.9 APK 可以直接覆盖较早的正式版本，账号、本地日历记录和应用数据会保留。若手机安装的是早期 Debug 包或其他签名版本，Android 会因签名不同而拒绝覆盖，需要先备份数据并卸载旧包。
 
 ## 主要功能
 
@@ -31,7 +42,8 @@
 - 设置每日工期，统计本月工作天数、请假天数和全部月份累计工期
 - 选择任意日期区间查看总工期
 - 展示农历、传统节日、国际节日、法定放假和调休上班标记
-- 明暗主题切换，适配桌面浏览器、手机浏览器和 Android WebView
+- 主题装扮支持云朵体、跟随系统字体、明暗配色与 AI 智能取景的自定义皮肤
+- 主题设置随账号同步，适配桌面浏览器、PWA 和 Android WebView
 
 ### 便签、待办与每日任务
 
@@ -71,6 +83,7 @@
 - 按用户查看账号状态、注册时间、最近登录和最近活跃时间
 - 用户搜索、排序、新增、修改、停用、重置密码与删除
 - 查看每位用户的规划、日历数据概览、聊天记录、模型调用和行为记录
+- 查看用户上传的壁纸原图、文件信息与历史上传状态；壁纸原图仅管理员可访问
 - 查看模型提供商、响应耗时、成功率、登录设备和同步次数
 - 桌面与手机端均提供适配布局
 
@@ -81,6 +94,7 @@
 - 只有使用 Agent 时，必要的对话内容和精简日历上下文才会发送给模型服务
 - 联网搜索仅在 Agent 需要资料时调用，外部链接由系统浏览器打开
 - API 密钥通过 Cloudflare 环境变量保存，不写入前端源码或仓库
+- 用户壁纸原图分片保存在 D1，下载接口要求管理员会话；用户删除当前皮肤后仍保留后台档案
 - 详细说明见：[隐私政策](https://calendar.yzzwnw.asia/privacy/)
 
 ## 技术栈
@@ -136,7 +150,7 @@ npm run build:cloudflare
 npx wrangler pages deploy dist --project-name xiaoy-calendar --branch main
 ```
 
-`build:cloudflare` 会把本地 `release/xiaoy-calendar-1.5-store.apk` 临时放入 `dist/downloads`。APK 不进入 Git 仓库，也不会被 Capacitor 打进 Android 安装包。D1 数据库绑定、模型密钥和搜索密钥应通过 Cloudflare 控制台或 Wrangler Secrets 配置。
+`build:cloudflare` 会把本地 `release/xiaoy-calendar-1.9-store.apk` 临时放入 `dist/downloads`。APK 不进入 Git 仓库，也不会被 Capacitor 打进 Android 安装包。D1 数据库绑定、模型密钥和搜索密钥应通过 Cloudflare 控制台或 Wrangler Secrets 配置。
 
 ## 项目结构
 

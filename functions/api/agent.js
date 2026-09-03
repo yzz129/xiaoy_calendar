@@ -49,7 +49,7 @@ const SYSTEM_PROMPT = `你是“小Y”，小Y日历里的高自由度时间规�
   "questions": ["需要追问的问题"],
   "searchQuery": "需要联网时填写，否则为空",
   "actionDrafts": [{
-    "kind": "set_day_status|set_date_range_status|add_note|update_note|delete_note|add_plan_task|update_plan_task|set_plan_task_done|move_plan_task|delete_plan_task|update_plan|delete_plan|change_nickname|open_profile|jump_to_date|open_date|open_plans|open_range|go_today|change_month|toggle_theme",
+    "kind": "set_day_status|set_date_range_status|add_note|update_note|delete_note|add_plan_task|update_plan_task|set_plan_task_done|move_plan_task|delete_plan_task|update_plan|delete_plan|change_nickname|open_profile|jump_to_date|open_date|open_plans|open_range|go_today|change_month|toggle_theme|set_theme|set_font_theme|set_surface_opacity|open_theme_settings",
     "date": "YYYY-MM-DD（需要日期的操作）",
     "startDate": "YYYY-MM-DD（批量操作开始日期）",
     "endDate": "YYYY-MM-DD（批量操作结束日期）",
@@ -67,7 +67,10 @@ const SYSTEM_PROMPT = `你是“小Y”，小Y日历里的高自由度时间规�
     "toDate": "YYYY-MM-DD",
     "nickname": "新昵称",
     "section": "nickname|password",
-    "offset": -1
+    "offset": -1,
+    "theme": "light|berry-night",
+    "fontTheme": "cloud|system",
+    "surfaceOpacity": 45
   }],
   "planDrafts": [{
     "type": "study|work",
@@ -153,6 +156,9 @@ function safeCalendarContext(calendar) {
     selectedDate: compactText(calendar.selectedDate, 10),
     nickname: compactText(calendar.nickname, 30),
     theme: calendar.theme === 'berry-night' ? 'berry-night' : 'light',
+    fontTheme: calendar.fontTheme === 'system' ? 'system' : 'cloud',
+    surfaceOpacity: Math.round(Math.max(45, Math.min(100, Number(calendar.surfaceOpacity) || 88))),
+    customSkinEnabled: Boolean(calendar.customSkinEnabled),
     stats: calendar.stats && typeof calendar.stats === 'object' ? {
       completed: Number(calendar.stats.completed) || 0,
       leave: Number(calendar.stats.leave) || 0,
@@ -171,6 +177,20 @@ function extractJson(text) {
   if (start < 0 || end <= start) throw new Error('模型未返回有效 JSON')
   const candidate = raw.slice(start, end + 1).replace(/,\s*([}\]])/g, '$1')
   return JSON.parse(candidate)
+}
+
+function cleanProviderReply(text) {
+  return String(text || '')
+    .replace(STREAM_META_MARKER, '')
+    .replace(/\s*(?:User|Response)\s+Safety\s*:\s*safe\b/gi, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+function plainReplyResult(text) {
+  const reply = cleanProviderReply(text)
+  if (!reply || reply.startsWith('{') || reply.startsWith('[')) return null
+  return { status: 'answer', reply, questions: [], searchQuery: '', actionDrafts: [], planDrafts: [] }
 }
 
 function responseText(payload) {
@@ -331,7 +351,11 @@ function createStreamReplyExtractor(onText) {
       mode = 'plain-reply'
     }
 
-    const markerIndex = pending.indexOf(STREAM_META_MARKER)
+    const stopMarkers = [STREAM_META_MARKER, 'User Safety:', 'Response Safety:']
+    const markerIndex = stopMarkers.reduce((earliest, marker) => {
+      const index = pending.indexOf(marker)
+      return index >= 0 && (earliest < 0 || index < earliest) ? index : earliest
+    }, -1)
     if (markerIndex >= 0) {
       if (markerIndex > 0) await onText?.(pending.slice(0, markerIndex))
       pending = ''
@@ -340,9 +364,11 @@ function createStreamReplyExtractor(onText) {
     }
 
     let markerPrefixLength = 0
-    const maxPrefix = Math.min(pending.length, STREAM_META_MARKER.length - 1)
-    for (let length = 1; length <= maxPrefix; length += 1) {
-      if (STREAM_META_MARKER.startsWith(pending.slice(-length))) markerPrefixLength = length
+    for (const marker of stopMarkers) {
+      const maxPrefix = Math.min(pending.length, marker.length - 1)
+      for (let length = 1; length <= maxPrefix; length += 1) {
+        if (marker.startsWith(pending.slice(-length))) markerPrefixLength = Math.max(markerPrefixLength, length)
+      }
     }
     const safeLength = pending.length - markerPrefixLength
     if (safeLength > 0) {
@@ -434,6 +460,7 @@ async function completeJson(env, messages, audit, { stream = false, streamProtoc
   const failures = []
   for (const provider of availableProviders(env)) {
     const startedAt = Date.now()
+    let rawResponse = ''
     try {
       const response = await fetchWithTimeout(provider.url, {
         method: 'POST',
@@ -453,12 +480,17 @@ async function completeJson(env, messages, audit, { stream = false, streamProtoc
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const completion = stream ? await readCompletionStream(response, onDelta) : null
       const payload = stream ? null : await response.json()
-      const rawResponse = stream ? completion.rawResponse : responseText(payload)
+      rawResponse = stream ? completion.rawResponse : responseText(payload)
       const result = streamProtocol ? extractStreamResult(rawResponse) : extractJson(rawResponse)
       await recordModelCall(env, audit, provider, 'success', startedAt, rawResponse)
       return { result, provider: provider.name, model: completion?.model || payload?.model || provider.model }
     } catch (error) {
-      await recordModelCall(env, audit, provider, 'failed', startedAt, '', error?.message || 'failed')
+      const fallback = plainReplyResult(rawResponse)
+      if (fallback) {
+        await recordModelCall(env, audit, provider, 'success', startedAt, rawResponse, `已降级为普通回复：${error?.message || 'invalid JSON'}`)
+        return { result: fallback, provider: provider.name, model: provider.model }
+      }
+      await recordModelCall(env, audit, provider, 'failed', startedAt, rawResponse, error?.message || 'failed')
       failures.push(`${provider.name}: ${error?.name === 'AbortError' ? 'timeout' : error?.message || 'failed'}`)
     }
   }
@@ -514,6 +546,54 @@ function explicitSearchQuery(message) {
   return /(联网|上网|网络搜索|搜索|搜一下|查资料|查找资料|最新(?:信息|政策|课程|资料|方案)|官网资料|网络资料)/.test(message)
     ? compactText(message, 180)
     : ''
+}
+
+function localThemeIntent(message, calendar) {
+  const text = String(message || '').replace(/\s+/g, '')
+  const actions = []
+  const replies = []
+  const add = (kind, values, reply) => {
+    actions.push({ kind, ...values })
+    replies.push(reply)
+  }
+
+  const opacityMatch = text.match(/(?:内容)?透明度(?:调(?:整)?(?:到|为)?|设(?:置)?(?:成|为|到)?|改(?:成|为|到)?|拉到)?(\d{1,3})%?/)
+  if (opacityMatch) {
+    const surfaceOpacity = Math.round(Math.max(45, Math.min(100, Number(opacityMatch[1]))))
+    add('set_surface_opacity', { surfaceOpacity }, `把背景之外的内容透明度设为 ${surfaceOpacity}%`)
+  }
+
+  if (/(?:使用|换成|改成|切换到|设为|设置为)?(?:系统字体|跟随系统字体)/.test(text)) {
+    add('set_font_theme', { fontTheme: 'system' }, '切换为跟随系统字体')
+  } else if (/(?:使用|换成|改成|切换到|设为|设置为)?云朵体/.test(text)) {
+    add('set_font_theme', { fontTheme: 'cloud' }, '切换为云朵体')
+  } else if (/(?:帮我)?(?:换个|切换|更换)(?:一下)?字体/.test(text)) {
+    const fontTheme = calendar.fontTheme === 'system' ? 'cloud' : 'system'
+    add('set_font_theme', { fontTheme }, fontTheme === 'system' ? '切换为跟随系统字体' : '切换为云朵体')
+  }
+
+  if (/(?:莓果夜色|夜间主题|夜色主题|深色主题|暗色主题)/.test(text)) {
+    add('set_theme', { theme: 'berry-night' }, '切换为莓果夜色皮肤')
+  } else if (/(?:云朵晴空|日间主题|亮色主题|浅色主题)/.test(text)) {
+    add('set_theme', { theme: 'light' }, '切换为云朵晴空皮肤')
+  } else if (/(?:帮我)?(?:换个|切换|更换)(?:一下)?(?:主题|皮肤)/.test(text) && !/(?:壁纸|图片|上传|自定义)/.test(text)) {
+    const theme = calendar.theme === 'berry-night' ? 'light' : 'berry-night'
+    add('set_theme', { theme }, theme === 'berry-night' ? '切换为莓果夜色皮肤' : '切换为云朵晴空皮肤')
+  }
+
+  if (/(?:打开|进入|查看)(?:一下)?主题(?:页|页面|设置)|(?:上传|更换|换)(?:自定义)?(?:壁纸|背景图|背景图片)/.test(text)) {
+    add('open_theme_settings', {}, '打开主题设置页')
+  }
+
+  if (!actions.length) return null
+  return {
+    status: 'proposal',
+    reply: `可以，我已经准备好：${replies.join('；')}。确认下面的操作后就会立即生效。`,
+    questions: [],
+    searchQuery: '',
+    actionDrafts: actions.slice(0, 8),
+    planDrafts: [],
+  }
 }
 
 function normalizePlanDrafts(value, today) {
@@ -735,7 +815,12 @@ function normalizeActionDrafts(value, calendar, message = '') {
     if (kind === 'open_profile') return [{ ...base, section: draft?.section === 'password' ? 'password' : 'nickname', sensitive: true }]
     if (kind === 'jump_to_date' && date) return [{ ...base, date, automatic: true }]
     if (kind === 'open_date' && date) return [{ ...base, date }]
-    if (['open_plans', 'open_range', 'go_today', 'toggle_theme'].includes(kind)) return [base]
+    if (['open_plans', 'open_range', 'go_today', 'toggle_theme', 'open_theme_settings'].includes(kind)) return [base]
+    if (kind === 'set_theme' && ['light', 'berry-night'].includes(draft?.theme)) return [{ ...base, theme: draft.theme }]
+    if (kind === 'set_font_theme' && ['cloud', 'system'].includes(draft?.fontTheme)) return [{ ...base, fontTheme: draft.fontTheme }]
+    if (kind === 'set_surface_opacity' && Number.isFinite(Number(draft?.surfaceOpacity))) {
+      return [{ ...base, surfaceOpacity: Math.round(Math.max(45, Math.min(100, Number(draft.surfaceOpacity)))) }]
+    }
     if (kind === 'change_month') {
       const offset = Math.max(-12, Math.min(12, Math.trunc(Number(draft?.offset) || 0)))
       return offset ? [{ ...base, offset }] : []
@@ -785,6 +870,7 @@ async function runAgent({ request, env, user, payload, emitStatus, emitDelta, em
   let streamedReply = false
   let preludeVisible = false
   let replyStarted = false
+  const localTheme = localThemeIntent(message, calendar)
   if (searchQuery) {
     await emitStatus?.('searching', `正在联网核对：${searchQuery}`)
     await logActivity(env, request, user.id, 'agent_search', { query: searchQuery })
@@ -817,12 +903,21 @@ async function runAgent({ request, env, user, payload, emitStatus, emitDelta, em
     })
   }
 
-  await emitStatus?.('composing', sources.length ? '资料已找到，正在边整理边输出…' : '正在边思考边输出…')
-  if (emitDelta) {
-    preludeVisible = true
-    await emitDelta(immediateStreamPrelude(message))
+  await emitStatus?.('composing', localTheme ? '正在准备主题修改…' : sources.length ? '资料已找到，正在边整理边输出…' : '正在边思考边输出…')
+  let finalPass
+  if (localTheme) {
+    finalPass = { result: localTheme, provider: 'local', model: 'theme-actions-v1' }
+    if (emitDelta) {
+      streamedReply = true
+      await emitReadableChunks(localTheme.reply, emitDelta)
+    }
+  } else {
+    if (emitDelta) {
+      preludeVisible = true
+      await emitDelta(immediateStreamPrelude(message))
+    }
+    finalPass = await streamPass(searchQuery ? `${message}；联网检索：${searchQuery}` : message)
   }
-  let finalPass = await streamPass(searchQuery ? `${message}；联网检索：${searchQuery}` : message)
 
   const modelSearchQuery = compactText(finalPass.result?.searchQuery, 180)
   if (!searchQuery && modelSearchQuery) {

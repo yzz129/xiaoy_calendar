@@ -88,6 +88,26 @@ try {
   assert.equal(payload.questions.length, 1)
   assert.equal(payload.provider.name, 'openrouter')
 
+  globalThis.fetch = async () => { throw new Error('主题指令不应请求外部模型') }
+  const themeResponse = await onRequestPost({
+    request: new Request('https://calendar.yzzwnw.asia/api/agent', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: '帮我换个字体，再把透明度调到 60%',
+        messages: [],
+        calendar: { today: '2026-08-20', fontTheme: 'cloud', surfaceOpacity: 88 },
+      }),
+    }),
+    env,
+  })
+  assert.equal(themeResponse.status, 200)
+  const themePayload = await themeResponse.json()
+  assert.equal(themePayload.provider.name, 'local')
+  assert.deepEqual(themePayload.actionDrafts.map((action) => action.kind), ['set_surface_opacity', 'set_font_theme'])
+  assert.equal(themePayload.actionDrafts[0].surfaceOpacity, 60)
+  assert.equal(themePayload.actionDrafts[1].fontTheme, 'system')
+
   globalThis.fetch = async (url) => {
     assert.equal(url, 'https://openrouter.ai/api/v1/chat/completions')
     return Response.json({
@@ -322,6 +342,23 @@ try {
   const pollinationsPayload = await pollinationsResponse.json()
   assert.equal(pollinationsPayload.provider.name, 'pollinations')
   assert.equal(pollinationsPayload.provider.model, 'YoannDev90/diffusiongemma-26b-a4b-it:free')
+
+  globalThis.fetch = async (url) => {
+    assert.equal(url, 'https://openrouter.ai/api/v1/chat/completions')
+    return Response.json({ model: 'plain-test-model', choices: [{ message: { content: '这是普通文字回复，不是 JSON。\nUser Safety: safe\nResponse Safety: safe' } }] })
+  }
+  const degradedResponse = await onRequestPost({
+    request: new Request('https://calendar.yzzwnw.asia/api/agent', {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: '说一句普通回答', messages: [], calendar: { today: '2026-08-20' } }),
+    }),
+    env: { DB, OPENROUTER_API_KEY: 'test-key' },
+  })
+  assert.equal(degradedResponse.status, 200)
+  const degradedPayload = await degradedResponse.json()
+  assert.equal(degradedPayload.reply, '这是普通文字回复，不是 JSON。')
+  assert.equal(degradedPayload.status, 'answer')
 } finally {
   globalThis.fetch = originalFetch
 }

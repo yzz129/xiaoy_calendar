@@ -36,8 +36,8 @@ export default function LoginScreen({ onLogin, onRegister, adminMode = false }) 
           <div><p>{adminMode ? '管理员入口' : mode === 'register' ? '第一次见面' : '欢迎回来'}</p><h1 id="auth-title">{adminMode ? '登录管理后台' : mode === 'register' ? '注册小Y日历' : '登录小Y日历'}</h1><small>{adminMode ? '仅管理员账号可进入，普通用户请返回日历登录页。' : mode === 'register' ? '填写昵称和密码创建账号，注册成功后会自动登录。' : '使用已经注册的昵称和密码登录，以后打开可自动登录。'}</small></div>
         </div>
         {!adminMode ? <div className="auth-mode-tabs" role="tablist" aria-label="账号操作">
-          <button type="button" role="tab" aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setError('') }}><LogIn />登录</button>
           <button type="button" role="tab" aria-selected={mode === 'register'} className={mode === 'register' ? 'active' : ''} onClick={() => { setMode('register'); setError('') }}><UserPlus />注册</button>
+          <button type="button" role="tab" aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setError('') }}><LogIn />登录</button>
         </div> : null}
         <form className="auth-form" onSubmit={submit}>
           <label><span><UserRound />昵称</span><input value={nickname} onChange={(event) => setNickname(event.target.value.slice(0, 20))} autoComplete="username" placeholder="2—20 个中英文或数字" required /></label>

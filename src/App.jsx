@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { BookOpenCheck, ChevronUp } from 'lucide-react'
 import AppHeader from './components/AppHeader'
 import CalendarGrid from './components/CalendarGrid'
@@ -9,6 +9,7 @@ import { dateLabel, fromKey, getMonthCells, getRangeStats, isSameMonth, monthLab
 import { getActivePlanCount, getPlanProgress, getPlanTasksForDate } from './plan-utils'
 import { useCalendarStore } from './useCalendarStore'
 import { authFetch } from './auth'
+import { paletteStyleVariables } from './theme-palette'
 
 const STATUS_LABELS = { work: '工作日', rest: '休息日', leave: '请假' }
 const PRIVACY_ACCEPTED_KEY = 'xiaoy-calendar-privacy-accepted-v2'
@@ -16,6 +17,7 @@ const AGENT_VISIBLE_KEY = 'xiaoy-calendar-agent-visible:v1'
 const PlanCenter = lazy(() => import('./components/PlanCenter'))
 const AgentPet = lazy(() => import('./components/AgentPet'))
 const ProfileDialog = lazy(() => import('./components/ProfileDialog'))
+const ThemeDialog = lazy(() => import('./components/ThemeDialog'))
 
 function getMonthRange(date) {
   return {
@@ -32,6 +34,8 @@ export default function App({ user, onUserUpdated, onLogout }) {
   const [planCenterOpen, setPlanCenterOpen] = useState(false)
   const [rangeOpen, setRangeOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [themeOpen, setThemeOpen] = useState(false)
+  const [skinUrl, setSkinUrl] = useState('')
   const [profileSection, setProfileSection] = useState('nickname')
   const [rangeStart, setRangeStart] = useState(() => getMonthRange(today).start)
   const [rangeEnd, setRangeEnd] = useState(() => getMonthRange(today).end)
@@ -61,9 +65,34 @@ export default function App({ user, onUserUpdated, onLogout }) {
     resetPlanTask,
     movePlanTask,
     toggleTheme,
+    updateThemeSettings,
   } = useCalendarStore(user.id)
   const todayKey = toKey(today)
   const selectedKey = toKey(selectedDate)
+
+  useEffect(() => {
+    let active = true
+    let objectUrl = ''
+    if (!store.skin?.enabled || !store.skin?.revision) {
+      setSkinUrl('')
+      return undefined
+    }
+    authFetch(`/api/theme/skin?revision=${encodeURIComponent(store.skin.revision)}`)
+      .then((response) => {
+        if (!response.ok) throw new Error('skin-unavailable')
+        return response.blob()
+      })
+      .then((blob) => {
+        if (!active) return
+        objectUrl = URL.createObjectURL(blob)
+        setSkinUrl(objectUrl)
+      })
+      .catch(() => { if (active) setSkinUrl('') })
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [store.skin?.enabled, store.skin?.revision])
 
   const cells = useMemo(() => getMonthCells(viewDate), [viewDate])
   const stats = useMemo(() => {
@@ -129,6 +158,9 @@ export default function App({ user, onUserUpdated, onLogout }) {
       selectedDate: selectedKey,
       nickname: user.nickname,
       theme: store.theme,
+      fontTheme: store.fontTheme,
+      surfaceOpacity: store.surfaceOpacity,
+      customSkinEnabled: Boolean(store.skin?.enabled),
       stats,
       recentAvailability,
       plans: store.plans.map((plan) => ({
@@ -136,7 +168,7 @@ export default function App({ user, onUserUpdated, onLogout }) {
         progress: getPlanProgress(plan, store.planProgress, store.planTaskOverrides),
       })).slice(0, 20),
     }
-  }, [cells, selectedKey, stats, store.entries, store.notes, store.planProgress, store.planTaskOverrides, store.plans, store.theme, todayKey, user.nickname, viewDate])
+  }, [cells, selectedKey, stats, store.entries, store.fontTheme, store.notes, store.planProgress, store.planTaskOverrides, store.plans, store.skin?.enabled, store.surfaceOpacity, store.theme, todayKey, user.nickname, viewDate])
 
   const changeMonth = (offset) => {
     setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1))
@@ -300,13 +332,38 @@ export default function App({ user, onUserUpdated, onLogout }) {
       case 'toggle_theme':
         toggleTheme()
         return '主题已切换'
+      case 'set_theme':
+        updateThemeSettings({ theme: action.theme, skin: { ...store.skin, enabled: false } })
+        return action.theme === 'berry-night' ? '已切换为莓果夜色皮肤' : '已切换为云朵晴空皮肤'
+      case 'set_font_theme':
+        updateThemeSettings({ fontTheme: action.fontTheme })
+        return action.fontTheme === 'system' ? '已切换为跟随系统字体' : '已切换为云朵体'
+      case 'set_surface_opacity':
+        updateThemeSettings({ surfaceOpacity: action.surfaceOpacity })
+        return `内容透明度已设为 ${action.surfaceOpacity}%`
+      case 'open_theme_settings':
+        setThemeOpen(true)
+        return '已打开主题设置'
       default:
         throw new Error('这个操作当前不受支持')
     }
-  }, [addPlanTask, createNote, movePlanTask, onUserUpdated, removeNote, removePlan, removePlanTask, selectDate, setPlanTaskDone, today, toggleTheme, updateEntriesRange, updateEntry, updateNote, updatePlan, updatePlanTask])
+  }, [addPlanTask, createNote, movePlanTask, onUserUpdated, removeNote, removePlan, removePlanTask, selectDate, setPlanTaskDone, store.skin, today, toggleTheme, updateEntriesRange, updateEntry, updateNote, updatePlan, updatePlanTask, updateThemeSettings])
 
   return (
-    <div className="app" data-theme={store.theme}>
+    <div
+      className={`app ${skinUrl && store.skin?.enabled ? 'has-custom-skin' : ''}`}
+      data-theme={store.theme}
+      data-font-theme={store.fontTheme}
+      data-adaptive-palette={skinUrl && store.skin?.enabled && store.skin?.palette ? 'true' : 'false'}
+      style={{
+        '--content-opacity': store.surfaceOpacity / 100,
+        ...(skinUrl && store.skin?.enabled ? {
+          '--skin-image': `url("${skinUrl}")`,
+          '--skin-position': `${store.skin.focusX * 100}% ${store.skin.focusY * 100}%`,
+          ...paletteStyleVariables(store.skin.palette),
+        } : {}),
+      }}
+    >
       <div className="app-frame">
         <AppHeader
           month={monthLabel(viewDate)}
@@ -315,8 +372,7 @@ export default function App({ user, onUserUpdated, onLogout }) {
           onToday={goToday}
           onPlans={openPlanCenter}
           activePlanCount={activePlanCount}
-          theme={store.theme}
-          onTheme={toggleTheme}
+          onTheme={() => setThemeOpen(true)}
           user={user}
           onProfile={() => { setProfileSection('nickname'); setProfileOpen(true) }}
           onLogout={onLogout}
@@ -400,6 +456,16 @@ export default function App({ user, onUserUpdated, onLogout }) {
       {profileOpen ? (
         <Suspense fallback={null}>
           <ProfileDialog user={user} initialSection={profileSection} onClose={() => setProfileOpen(false)} onUpdated={onUserUpdated} />
+        </Suspense>
+      ) : null}
+      {themeOpen ? (
+        <Suspense fallback={null}>
+          <ThemeDialog
+            settings={{ theme: store.theme, fontTheme: store.fontTheme, surfaceOpacity: store.surfaceOpacity, skin: store.skin }}
+            skinUrl={skinUrl}
+            onChange={updateThemeSettings}
+            onClose={() => setThemeOpen(false)}
+          />
         </Suspense>
       ) : null}
       {privacyAccepted ? (

@@ -14,6 +14,8 @@ import {
   KeyRound,
   ListTodo,
   MoveDiagonal2,
+  Layers3,
+  Palette,
   PencilLine,
   Plus,
   RotateCcw,
@@ -21,6 +23,7 @@ import {
   Sparkles,
   StickyNote,
   Trash2,
+  Type,
   UserRoundCog,
   X,
 } from 'lucide-react'
@@ -298,6 +301,10 @@ const ACTION_LABELS = {
   go_today: '回到今天',
   change_month: '切换月份',
   toggle_theme: '切换主题',
+  set_theme: '更换内置皮肤',
+  set_font_theme: '更换字体',
+  set_surface_opacity: '调整内容透明度',
+  open_theme_settings: '打开主题设置',
 }
 
 function ActionIcon({ kind }) {
@@ -305,6 +312,9 @@ function ActionIcon({ kind }) {
   if (kind.includes('task') || kind.includes('plan')) return <ListTodo />
   if (kind === 'change_nickname') return <PencilLine />
   if (kind === 'open_profile') return <KeyRound />
+  if (kind === 'set_font_theme') return <Type />
+  if (kind === 'set_surface_opacity') return <Layers3 />
+  if (kind === 'set_theme' || kind === 'open_theme_settings' || kind === 'toggle_theme') return <Palette />
   return <CalendarCheck2 />
 }
 
@@ -338,6 +348,10 @@ function actionDescription(action) {
     case 'open_range': return '选择时间段并统计总工期'
     case 'go_today': return '定位到今天的日期'
     case 'toggle_theme': return '在日间与夜间主题间切换'
+    case 'set_theme': return action.theme === 'berry-night' ? '使用“莓果夜色”，并停用当前自定义壁纸' : '使用“云朵晴空”，并停用当前自定义壁纸'
+    case 'set_font_theme': return action.fontTheme === 'system' ? '尽量跟随当前手机或电脑系统字体' : '使用小Y日历默认云朵体'
+    case 'set_surface_opacity': return `背景图保持不变，其他内容调整为 ${action.surfaceOpacity}%`
+    case 'open_theme_settings': return '打开字体、透明度和自定义壁纸设置'
     default: return '由小Y操作应用'
   }
 }
